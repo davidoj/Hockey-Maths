@@ -1,0 +1,70 @@
+
+object = {}
+
+object_mt = {__index = object}
+
+ball = {
+   x = 10,
+   y = 10,
+   w = 30,
+   h = 30,
+   xdot = 300,
+   ydot = 300,
+   img = love.graphics.newImage('svg/redBall.png')
+}
+
+borders = {
+   xMin = 0,
+   xMax = love.window.getWidth(),
+   yMin = 0,
+   yMax = love.window.getHeight()
+}
+
+Stick = {
+   x=10,
+   y=200,
+   w = 30,
+   h = 130,
+   theta = 0,
+   xdot = 0,
+   ydot = 0,
+   thetadot = 0,
+   img = love.graphics.newImage('svg/hockeyStick.png')
+}
+
+Stick_mt = {__index = Stick}
+
+function object:update_vertices()
+   self.vertices = {self.x,self.y,self.x+self.w,self.y,self.x+self.w,self.y+self.h,self.x,self.y+self.h}
+end
+
+function object:create(img,x,y,w,h,xdot,ydot,theta,thetadot)
+   local obj = {img=love.graphics.newImage(img),
+                x = x,
+                y = y,
+                w = w
+                h = h
+                xdot = xdot,
+                theta = theta,
+                thetadot = thetadot}
+   obj:update_vertices()
+   setmetatable(stick,object_mt)
+   return obj
+end
+
+function object:update()
+   local xdot = self.xdot or 0
+   local ydot = self.ydot or 0
+   local thetadot = self.thetadot or 0
+   self.x = self.x + self.xdot
+   self.y = self.y + self.ydot
+   self.theta = self.theta + self.thetadot
+   self:update_vertices()
+end
+
+l_stick, r_stick = Stick:create(50), Stick:create(750)
+
+function draw_object(obj)
+   theta = obj.theta or 0
+   love.graphics.draw(obj.img,obj.x,obj.y,theta)
+end
