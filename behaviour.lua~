@@ -1,0 +1,53 @@
+-- behaviours that objects can execute
+
+require "objects"
+require "util"
+
+-- Predicts the position of the ball when it reaches object's x position
+function predict(stick,ball)
+   sx = stick.x - stick.ox
+   local t = -1*stick.side*math.abs(sx+stick.side*stick.w-ball.x)/ball.xdot
+   local y = ball.y + ball.ydot*t
+   local h = love.window.getHeight() - ball.h
+   local trav = math.floor(y/h)
+   return (trav%2)*h+(-1)^trav*(y%h), t
+end
+
+
+-- Idle animation for the stick
+function stick:idle(dt)
+
+   local tdot = self.thetadot
+   if tdot < self.thetadotmax then
+      tdot = 0
+   end
+   self.thetaaccel =  (3/2 - self.theta - 0.15*tdot)/dt
+
+   self.yaccel = (200 - self.y + self.oy - 0.15*self.ydot)/dt
+
+end
+
+-- accelerate stick to specified pos, angle at time delta_t 
+function stick:accel_to_point(x,y,angle,delta_t)
+   a = {angle,6.28}
+   angle = a[math.random(2)]
+
+   local d_theta = angle - self.theta
+   local d_x, d_y = x - self.x, y - self.y
+
+   self.xaccel = 2*(d_x - self.xdot*delta_t)/delta_t^2
+   self.yaccel = 2*(d_y - self.ydot*delta_t)/delta_t^2
+   self.thetaaccel = 2*(d_theta - self.thetadot*delta_t)/delta_t^2
+
+end
+
+-- move stick smoothly to intercept ball
+function stick:seek(ball)
+   local py, delta_t = predict(self,ball)
+
+   time = love.timer.getTime()
+
+   self:accel_to_point(self.x,py+self.oy,0,delta_t)
+
+   return time+delta_t
+end

@@ -9,12 +9,10 @@ function love.load(arg)
    
    love.keyboard.setKeyRepeat( disable )
 
+   setup_objects_and_borders()
+
    question = create_random_question(Params.ops)
    ans = ''
-
-   update_vertices(l_stick)
-   update_vertices(ball)
-   update_vertices(r_stick)
 
 end
 
@@ -38,10 +36,9 @@ end
 
 function love.update(dt)
    
-   ball.x = ball.x + ball.xdot*dt
-   ball.y = ball.y + ball.ydot*dt
-   l_stick.x = l_stick.x + l_stick.xdot*dt
-   l_stick.y = l_stick.y + l_stick.ydot*dt
+   ball:update(dt)
+   l_stick:update(dt)
+   r_stick:update(dt)
 
    local wc,tc,sc = WallCollision(ball,borders), ObjectCollision(ball,l_stick)
 
@@ -50,12 +47,7 @@ function love.update(dt)
    end
    if wc then
       ReflectFromSurface(ball,wc)
-   end
-   -- if c~={0,0} then
-   --    ReflectFromWall(ball,c)
-   -- end
-
-   
+   end   
 
    if love.keyboard.isDown('w') then
       l_stick.ydot = -300
@@ -67,14 +59,12 @@ function love.update(dt)
       l_stick.xdot = 300
    else l_stick.xdot, l_stick.ydot = 0, 0
    end
-   --if love.keyboard.isDown('q') then
-   --   stick.theta = stick.theta-10*dt;
-   -- end
-   -- if love.keyboard.isDown('e') then
-   --    stick.theta = stick.theta+10*dt;
-   -- end
-   update_vertices(ball)
-   update_vertices(l_stick)
+   if love.keyboard.isDown('q') then
+      l_stick.thetadot = -10
+   elseif love.keyboard.isDown('e') then
+      l_stick.thetadot = 10
+   else l_stick.thetadot = 0
+   end
 
 end
 

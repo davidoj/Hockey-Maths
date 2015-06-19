@@ -1,3 +1,5 @@
+-- methods for creating and updating objects in game
+
 
 object = {}
 
@@ -8,11 +10,16 @@ ball = {
    y = 10,
    w = 30,
    h = 30,
+   ox = 0,
+   oy = 0,
    theta = 0,
    xdot = 300,
    ydot = 300,
    thetadot = 0,
-   img = love.graphics.newImage('svg/redBall.png')
+   xaccel = 0,
+   yaccel = 0,
+   thetaaccel = 0,
+   img = love.graphics.newImage('art/redBall.png')
 }
 
 stick = {
@@ -24,7 +31,12 @@ stick = {
    xdot = 0,
    ydot = 0,
    thetadot = 0,
-   img = love.graphics.newImage('svg/hockeyStick.png')
+   thetadotmax = 1.5,
+   xaccel = 0,
+   yaccel = 0,
+   thetaaccel = 0,
+   wait = 0,
+   img = love.graphics.newImage('art/hockeyStick.png')
 }
 
 function object:update_vertices()
@@ -51,13 +63,15 @@ function object:create(obj)
    return obj
 end
 
-function stick:create(x,y)
+function stick:create(x,y,side)
    local st = {}
    for i, v in pairs(self) do
       st[i] = v
    end
    st.x = x
    st.y = y
+   st.side = side
+   st.actions = {}
    st = object:create(st)
    st:update_vertices()
    return st
@@ -76,8 +90,37 @@ function object:update(dt)
    self.x = self.x + xdot
    self.y = self.y + ydot
    self.theta = self.theta + thetadot
+   while self.theta > 3*math.pi/2 do self.theta = self.theta - 2*math.pi end
+
+   self.xdot = self.xdot + self.xaccel*dt
+   self.ydot = self.ydot + self.yaccel*dt
+   self.thetadot = self.thetadot + self.thetaaccel*dt
    self:update_vertices()
 end
+
+function stick:update(dt)
+
+   self.wait = self:execute(self.actions[1]) + love.timer.getTime()   
+
+   if love.timer.getTime() > self.wait then
+      table.remove(self.actions,1)
+   end
+
+
+   object.update(self,dt) 
+  
+end
+
+function stick:execute(action)
+   local t = 0
+   if action ~= nil then
+      t = action(self)       
+   else 
+      self:idle()      
+   end
+   return t
+end
+   
 
 function draw_object(obj)
    local theta = obj.theta or 0
@@ -92,8 +135,8 @@ function setup_objects_and_borders()
       yMax = love.window.getHeight()
    }
 
-   l_stick = stick:create(50,200)
-   r_stick = stick:create(750,200)
+   l_stick = stick:create(50,200,1)
+   r_stick = stick:create(750,200,-1)
    ball = ball:create()
 
 end

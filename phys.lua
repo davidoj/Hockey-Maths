@@ -1,33 +1,6 @@
--- Collision detection.
+-- Collision detection
 
 require "math"
-
--- function ObjectCollision(obj1,obj2)
---    return obj1.x < obj2.x+obj2.w and
---       obj2.x < obj1.x+obj1.w and
---       obj1.y < obj2.y+obj2.h and
---       obj2.y < obj1.y+obj1.h
--- end
-
--- function WallCollision(obj1,borders)
---    if obj1.x+obj1.w >= borders.xMax or
---       obj1.x < borders.xMin then
---          return 0
---    elseif  obj1.y+obj1.h >= borders.yMax or
---       obj1.y < borders.yMin then
---          return 3.14/2
---    end
---    return nil
--- end
-
--- -- Returns bool, bool indicating whether x and/or y axes of the objects overlap
--- function AxisOverlap(obj1,obj2)
---    local xv, yv = 0, 0
---    xv = (obj1.x+obj1.w < obj2.x and obj2.x + obj2.w < obj1.x)
---    yv = (obj1.y+obj2.y < obj2.y and obj2.y + obj2.h < obj1.y)
---    return xv, yv
--- end
-
 
 -- Checks for collision between reactive and 'static' object, returns index of face of static object
 -- first collided with (1-4 starting from left)
@@ -35,9 +8,11 @@ require "math"
 
 function ObjectCollision(objR,objS)
    --local minT = math.huge
+   sx, sy = objS.x - objS.ox, objS.y - objS.oy
+   rx, ry = objR.x - objR.ox, objR.y - objR.oy
    local ux, uy = objS.xdot-objR.xdot, objS.ydot-objR.ydot
-   local dx1, dx2 = objS.x-objR.x-objR.w, objS.x+objS.w-objR.x
-   local dy1, dy2 = objS.y-objR.y-objR.h, objS.y+objS.h-objR.y
+   local dx1, dx2 = sx-rx-objR.w, sx+objS.w-rx
+   local dy1, dy2 = sy-ry-objR.h, sy+objS.h-ry
    local tx1,tx2,ty1,ty2 =  -dx1/ux,-dx2/ux, -dy1/uy,-dy2/uy
    local minx,maxx,miny,maxy = math.min(tx1,tx2), math.max(tx1,tx2), math.min(ty1,ty2), math.max(ty1,ty2)
    maxMin = math.max(minx,miny)
@@ -71,11 +46,12 @@ end
 
 function WallCollision(obj,borders)
    local c = {0,0}
-   if obj.x < borders.xMin then c[1] = 1
-   elseif obj.x+obj.w >= borders.xMax then c[1] = -1
+   x, y = obj.x - obj.ox, obj.y - obj.oy
+   if x < borders.xMin then c[1] = 1
+   elseif x+obj.w >= borders.xMax then c[1] = -1
    end
-   if obj.y < borders.yMin then c[2] = 1
-   elseif obj.y + obj.h >= borders.yMax then c[2] = -1
+   if y < borders.yMin then c[2] = 1
+   elseif y + obj.h >= borders.yMax then c[2] = -1
    end
    return c
 end
@@ -106,13 +82,4 @@ function Rotate(x,y,angle)
    newx = x*math.cos(angle) - y*math.sin(angle)
    newy = x*math.sin(angle) + y*math.cos(angle)
    return newx ,newy
-end
-
--- Predicts the position of the ball when it reaches ownx
-function Predict(stick,ball,side)
-   local t = -1*side*math.abs(stick.x+side*stick.w-ball.x)/ball.xdot
-   local y = ball.y + ball.ydot*t
-   local h = love.window.getHeight() - ball.h
-   local trav = math.floor(y/h)
-   return (trav%2)*h+(-1)^trav*(y%h)
 end
