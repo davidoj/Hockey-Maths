@@ -36,6 +36,7 @@ stick = {
    yaccel = 0,
    thetaaccel = 0,
    wait = 0,
+   e_time = 0, -- timer for action execution
    img = love.graphics.newImage('art/hockeyStick.png')
 }
 
@@ -99,24 +100,27 @@ function object:update(dt)
 end
 
 function stick:update(dt)
-
-   self.wait = self:execute(self.actions[1]) + love.timer.getTime()   
-
-   if love.timer.getTime() > self.wait then
-      table.remove(self.actions,1)
-   end
-
+   
+   if self.e_time >= self.wait then
+      if self.wait > 0 then
+         table.remove(self.actions,1)  -- only timeout the current action if it's not idle()-ing
+      end
+      self.e_time = 0
+      self.wait = self:execute(self.actions[1],dt)
+   else 
+      self:execute(self.actions[1],dt)
+   end   
 
    object.update(self,dt) 
   
 end
 
-function stick:execute(action)
+function stick:execute(action,dt)
    local t = 0
    if action ~= nil then
-      t = action(self)       
+      t = action(self,dt)       
    else 
-      self:idle()      
+      self:idle(dt)      
    end
    return t
 end

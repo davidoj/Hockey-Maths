@@ -7,7 +7,7 @@ function time_to_hit(stick,ball)
    local t = -1*stick.side*math.abs(sx+stick.side*stick.w-ball.x)/ball.xdot
    return t
 end
--- Predicts the position of the ball when it reaches object's x position
+-- Predicts the y position of the ball when it reaches object's x position
 function predict(stick,ball)
    sx = stick.x - stick.ox
    local t = time_to_hit(stick,ball)
@@ -31,26 +31,22 @@ function stick:accel_to_point(x,y,angle,delta_t)
 
 end
 
-function stick:idle_t(t)
-   self:idle()
-   return t
-end
-
-
 -- move stick smoothly to intercept ball
-function stick:seek_ball()
+function stick:seek_ball(dt)
    local py, delta_t = predict(self,ball)
-
-   self:accel_to_point(self.x,py+self.oy,0,delta_t)
-
-   table.insert(self.actions,1,self.wait)
+   
+   if self.e_time == 0 then 
+      self:accel_to_point(self.x,py+self.oy,0,delta_t)
+   end
+   
+   self.e_time = self.e_time + dt
 
    return delta_t
 end
 
 
 -- Idle animation for the stick
-function stick:idle()
+function stick:idle(dt)
 
    local tdot = self.thetadot
    if tdot < self.thetadotmax then
@@ -69,6 +65,3 @@ function stick:idle()
 
 end
 
-function wait()
-   return t
-end
