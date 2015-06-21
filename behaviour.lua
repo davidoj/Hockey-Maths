@@ -18,9 +18,7 @@ function predict(stick,ball)
 end
 
 -- accelerate stick to specified pos, angle at time delta_t 
-function stick:accel_to_point(x,y,angle,delta_t)
-   a = {angle,2*math.pi+angle}
-   angle = a[math.random(2)]
+function stick:accelToPoint(x,y,angle,delta_t)
 
    local d_theta = angle - self.theta
    local d_x, d_y = x - self.x, y - self.y
@@ -32,11 +30,14 @@ function stick:accel_to_point(x,y,angle,delta_t)
 end
 
 -- move stick smoothly to intercept ball
-function stick:seek_ball(dt)
+function stick:seekBall(dt)
    local py, delta_t = predict(self,ball)
    
+   a =  {0,2*math.pi}
+   angle = a[math.random(2)]
+
    if self.e_time == 0 then 
-      self:accel_to_point(self.x,py+self.oy,0,delta_t)
+      self:accelToPoint(self.x,py+self.oy,angle,delta_t)
    end
    
    self.e_time = self.e_time + dt
@@ -53,9 +54,7 @@ function stick:idle(dt)
       tdot = 0
    end
 
-   local theta = self.theta
-
-   self.thetaaccel =  (self.side*3/2 - theta - 0.15*tdot)/0.01
+   self.thetaaccel =  ((2-self.side)*math.pi/2 - self.theta - 0.15*tdot)/0.01
 
    self.yaccel = (200 - self.y + self.oy - 0.15*self.ydot)/0.01
 
@@ -66,17 +65,17 @@ function stick:idle(dt)
 end
 
 -- wait until the ball is close to the stick
-function stick:wait_for_ball(dt)
+function stick:waitForBall(dt)
    
    local dx = self.side*(ball.x-self.x)
    local xdot = ball.xdot*self.side
 
-   if (dx*xdot > 0 or dx <= 0) then -- wait for collision, then check again
+   if (dx*xdot > 0 or dx < 0) then -- wait for collision, then check again
       table.insert(self.actions,1,self.idle)
       return math.huge
    end
 
-   local dwait = math.max(0,math.abs(dx-250))
+   local dwait = math.max(0,math.abs(dx-150))
 
    local delta_t = math.abs(dwait/ball.xdot)
 

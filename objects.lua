@@ -40,7 +40,7 @@ stick = {
    img = love.graphics.newImage('art/hockeyStick.png')
 }
 
-function object:update_vertices()
+function object:updateVertices()
 
    -- local s, c = math.sin(self.theta), math.cos(self.theta) 
    -- local x1 = -ox + self.x + (1-c)*self.w/2
@@ -74,13 +74,13 @@ function stick:create(x,y,side)
    st.side = side
    st.actions = {}
    st = object:create(st)
-   st:update_vertices()
+   st:updateVertices()
    return st
 end
 
 function ball:create()
    local b = object:create(ball)
-   b:update_vertices()
+   b:updateVertices()
    return b
 end
 
@@ -91,12 +91,11 @@ function object:update(dt)
    self.x = self.x + xdot
    self.y = self.y + ydot
    self.theta = self.theta + thetadot
-   while self.theta > 3*math.pi/2 do self.theta = self.theta - 2*math.pi end
 
    self.xdot = self.xdot + self.xaccel*dt
    self.ydot = self.ydot + self.yaccel*dt
    self.thetadot = self.thetadot + self.thetaaccel*dt
-   self:update_vertices()
+   self:updateVertices()
 end
 
 function ball:update(dt)
@@ -122,6 +121,12 @@ function stick:update(dt,ball_bounced)
       self:execute(self.actions[1],dt)
    end   
 
+   if self.side == 1 then
+      while self.theta > 3*math.pi/2 do self.theta = self.theta - 2*math.pi end
+   end
+   if self.side == -1 then
+      while self.theta < math.pi/2 do self.theta = self.theta + 2*math.pi end
+   end
    object.update(self,dt) 
   
 end
@@ -142,7 +147,7 @@ function draw_object(obj)
    love.graphics.draw(obj.img,obj.x,obj.y,theta,1,1,obj.ox,obj.oy)
 end
 
-function setup_objects_and_borders()
+function setupObjectsAndBorders()
    borders = {
       xMin = 0,
       xMax = love.window.getWidth(),
@@ -157,7 +162,13 @@ function setup_objects_and_borders()
 end
 
 -- a special update call for sticks and questions when the ball collides with a stick or either side of the screen
-function onBallCollision() 
+function onBallCollision(ccode) 
    l_stick:update(0,1)
    r_stick:update(0,1)
+   
+   if ccode[1] == 1 then 
+      table.insert(r_stick.actions,r_stick.waitForBall)
+      table.insert(r_stick.actions,r_stick.seekBall)
+   end
+   
 end

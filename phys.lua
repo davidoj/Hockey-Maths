@@ -72,7 +72,7 @@ function ball:HandleObjectCollision(obj,dt)
 
    if tc<dt and tc>=0 and sc then
        self:ReflectFromSurface(cId2ccode(sc))
-       onBallCollision()
+       onBallCollision(cId2ccode(sc))
    end
 end
 
@@ -81,7 +81,7 @@ function object:HandleWallCollision(borders)
    if wc then 
       self:ReflectFromSurface(wc) 
       if wc[1] ~= 0 then
-         onBallCollision()
+         onBallCollision(wc)
       end
    end
 end

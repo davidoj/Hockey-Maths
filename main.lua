@@ -13,10 +13,14 @@ function love.load(arg)
 
    font_lastTime = love.graphics.newFont('art/KGTheLastTime.ttf',35)
    love.graphics.setFont(font_lastTime)
-   setup_objects_and_borders()
+   setupObjectsAndBorders()
 
-   question = create_random_question(Params.ops)
+   question = createRandomQuestion(Params.ops)
    ans = ''
+
+   table.insert(r_stick.actions,r_stick.waitForBall)
+   table.insert(r_stick.actions,r_stick.seekBall)
+
 
 end
 
@@ -30,9 +34,9 @@ function love.keypressed(key)
       question:checkAnswer(ans)
       ans = ''
       if question.correct==1 then
-         question = create_random_question(Params.ops)
-         table.insert(l_stick.actions,l_stick.wait_for_ball)
-         table.insert(l_stick.actions,l_stick.seek_ball)
+         question = createRandomQuestion(Params.ops)
+         table.insert(l_stick.actions,l_stick.waitForBall)
+         table.insert(l_stick.actions,l_stick.seekBall)
       end
    end
    

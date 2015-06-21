@@ -26,7 +26,7 @@ function Question:execute()
 end
 
 
-function create_random_question(ops)
+function createRandomQuestion(ops)
    local question = {}
    local free = math.random(3)
    setmetatable(question,Question_mt)
