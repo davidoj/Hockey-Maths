@@ -15,8 +15,6 @@ function love.load(arg)
    love.graphics.setFont(font_lastTime)
    setup_objects_and_borders()
 
-   
-
    question = create_random_question(Params.ops)
    ans = ''
 
@@ -33,9 +31,8 @@ function love.keypressed(key)
       ans = ''
       if question.correct==1 then
          question = create_random_question(Params.ops)
+         table.insert(l_stick.actions,l_stick.wait_for_ball)
          table.insert(l_stick.actions,l_stick.seek_ball)
-         --r_stick.wait = love.timer.getTime() + time_to_hit(l_stick,ball) + 2
-         --table.insert(r_stick.actions,1,r_stick.seek_ball)
       end
    end
    
@@ -49,21 +46,6 @@ function love.update(dt)
    l_stick:update(dt)
    r_stick:update(dt)
 
-  
-
-    local wc,tc,sc = WallCollision(ball,borders), ObjectCollision(ball,l_stick)
-    local sw = WallCollision(l_stick,borders)
-
-
-    if tc<dt and tc>=0 and sc then
-       ReflectFromSurface(ball,cId2ccode(sc))
-    end
-    if wc then
-       ReflectFromSurface(ball,wc)
-       end   
-    if sw then
-       ReflectFromSurface(l_stick,sw)
-    end
 
 end
 

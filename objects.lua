@@ -99,11 +99,20 @@ function object:update(dt)
    self:update_vertices()
 end
 
+function ball:update(dt)
+   
+   HandleObjectCollision(self,l_stick,dt)
+   HandleObjectCollision(self, r_stick,dt)
+   HandleWallCollision(self, borders)
+   
+   object.update(self,dt)
+end
+
 function stick:update(dt)
    
    if self.e_time >= self.wait then
       if self.wait > 0 then
-         table.remove(self.actions,1)  -- only timeout the current action if it's not idle()-ing
+         table.remove(self.actions,1)  -- only timeout the current action if it wasn't previously idle()-ing
       end
       self.e_time = 0
       self.wait = self:execute(self.actions[1],dt)

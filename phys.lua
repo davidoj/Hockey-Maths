@@ -67,9 +67,20 @@ function ReflectFromSurface(obj,ccode)
    end
 end
 
+function HandleObjectCollision(ball,obj,dt)
+   local tc, sc = ObjectCollision(ball,obj)
+
+   if tc<dt and tc>=0 and sc then
+       ReflectFromSurface(ball,cId2ccode(sc))
+   end
+end
+
+function HandleWallCollision(obj,borders)
+   local wc = WallCollision(obj,borders)
+   if wc then ReflectFromSurface(obj,wc) end
+end
+
 -- What to do with the ball when it collides with something flat at angle orient
-
-
 -- function OnCollision(ball,wall_orient)
 --    local v_perp, v_parr = Rotate(ball.xdot,ball.ydot,wall_orient)
 --    ball.xdot, ball.ydot = Rotate(-v_perp,v_parr,-wall_orient)
