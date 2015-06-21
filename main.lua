@@ -1,7 +1,6 @@
 
 --debug = true
 
-require "phys"
 require "maths"
 require "objects"
 require "behaviour"
