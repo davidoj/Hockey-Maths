@@ -65,3 +65,30 @@ function stick:idle(dt)
 
 end
 
+-- wait until the ball is close to the stick
+function stick:wait_for_ball(dt)
+   
+   local dx = self.side*(ball.x-self.x)
+   local xdot = ball.xdot*self.side
+   local isLeft = (1/2)*(1+self.side)
+
+   if dx*xdot > 0 or dx < 0 then
+      local stickToWall = isLeft*borders.xMax + -self.side*self.x
+      local ballDn = ball.xdot/math.abs(ball.xdot)
+      local ballToWall = -ballDn*ball.x + borders.xMax*(1/2)*(1+ballDn)
+      if dx < 0 and dx*xdot < 0 then
+         dx = stickToWall + ballToWall + borders.xMax
+      else
+         dx = stickToWall + ballToWall
+      end
+   end
+
+   local dwait = math.max(0,math.abs(dx-250))
+
+   local delta_t = math.abs(dwait/ball.xdot)
+
+   self.e_time = self.e_time + dt
+   self:idle()
+
+   return delta_t
+end
