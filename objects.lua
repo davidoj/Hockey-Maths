@@ -101,18 +101,20 @@ end
 
 function ball:update(dt)
    
-   HandleObjectCollision(self,l_stick,dt)
-   HandleObjectCollision(self, r_stick,dt)
-   HandleWallCollision(self, borders)
+   self:HandleObjectCollision(l_stick,dt)
+   self:HandleObjectCollision(r_stick,dt)
+   self:HandleWallCollision(borders)
    
    object.update(self,dt)
 end
 
-function stick:update(dt)
-   
-   if self.e_time >= self.wait then
-      if self.wait > 0 then
-         table.remove(self.actions,1)  -- only timeout the current action if it wasn't previously idle()-ing
+function stick:update(dt,ball_bounced)
+      
+   if (self.e_time >= self.wait) or
+      (ball_bounced and self.wait == math.huge)
+   then
+      if self.wait > 0 then -- get new action
+         table.remove(self.actions,1)  
       end
       self.e_time = 0
       self.wait = self:execute(self.actions[1],dt)
@@ -152,4 +154,10 @@ function setup_objects_and_borders()
    r_stick = stick:create(750,200,-1)
    ball = ball:create()
 
+end
+
+-- a special update call for sticks and questions when the ball collides with a stick or either side of the screen
+function onBallCollision() 
+   l_stick:update(0,1)
+   r_stick:update(0,1)
 end

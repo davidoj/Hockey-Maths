@@ -1,7 +1,7 @@
 -- Collision detection
 
 require "math"
-
+require "objects"
 -- Checks for collision between reactive and 'static' object, returns index of face of static object
 -- first collided with (1-4 starting from left)
 -- Or a negative collision time if no collision
@@ -58,26 +58,32 @@ end
 
 -- Reflects object from vertical or horizontal surface
 
-function ReflectFromSurface(obj,ccode)
+function object:ReflectFromSurface(ccode)
    if ccode[1]~=0 then
-      obj.xdot = math.abs(obj.xdot)*ccode[1]
+      self.xdot = math.abs(self.xdot)*ccode[1]
    end
    if ccode[2]~=0 then
-      obj.ydot = math.abs(obj.ydot)*ccode[2]
+      self.ydot = math.abs(self.ydot)*ccode[2]
    end
 end
 
-function HandleObjectCollision(ball,obj,dt)
-   local tc, sc = ObjectCollision(ball,obj)
+function ball:HandleObjectCollision(obj,dt)
+   local tc, sc = ObjectCollision(self,obj)
 
    if tc<dt and tc>=0 and sc then
-       ReflectFromSurface(ball,cId2ccode(sc))
+       self:ReflectFromSurface(cId2ccode(sc))
+       onBallCollision()
    end
 end
 
-function HandleWallCollision(obj,borders)
-   local wc = WallCollision(obj,borders)
-   if wc then ReflectFromSurface(obj,wc) end
+function object:HandleWallCollision(borders)
+   local wc = WallCollision(self,borders)
+   if wc then 
+      self:ReflectFromSurface(wc) 
+      if wc[1] ~= 0 then
+         onBallCollision()
+      end
+   end
 end
 
 -- What to do with the ball when it collides with something flat at angle orient

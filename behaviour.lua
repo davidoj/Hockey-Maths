@@ -55,11 +55,11 @@ function stick:idle(dt)
 
    local theta = self.theta
 
-   --while theta > 3*math.pi/2 do theta = self.theta - 2*math.pi end
-
    self.thetaaccel =  (self.side*3/2 - theta - 0.15*tdot)/0.01
 
    self.yaccel = (200 - self.y + self.oy - 0.15*self.ydot)/0.01
+
+   self.e_time = self.e_time + dt
 
    return 0
 
@@ -70,17 +70,10 @@ function stick:wait_for_ball(dt)
    
    local dx = self.side*(ball.x-self.x)
    local xdot = ball.xdot*self.side
-   local isLeft = (1/2)*(1+self.side)
 
-   if dx*xdot > 0 or dx < 0 then
-      local stickToWall = isLeft*borders.xMax + -self.side*self.x
-      local ballDn = ball.xdot/math.abs(ball.xdot)
-      local ballToWall = -ballDn*ball.x + borders.xMax*(1/2)*(1+ballDn)
-      if dx < 0 and dx*xdot < 0 then
-         dx = stickToWall + ballToWall + borders.xMax
-      else
-         dx = stickToWall + ballToWall
-      end
+   if (dx*xdot > 0 or dx <= 0) then -- wait for collision, then check again
+      table.insert(self.actions,1,self.idle)
+      return math.huge
    end
 
    local dwait = math.max(0,math.abs(dx-250))
@@ -88,7 +81,7 @@ function stick:wait_for_ball(dt)
    local delta_t = math.abs(dwait/ball.xdot)
 
    self.e_time = self.e_time + dt
-   self:idle()
+   self:idle(dt)
 
    return delta_t
 end
