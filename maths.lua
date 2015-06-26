@@ -127,6 +127,7 @@ function question:toString()
 end
 
 function question:checkAnswer()
+   table.insert(q.attempts,total_attempts)
    local terms = deepcopy(self.terms)
    terms[self.free] = self.trial_answer
    local test = tostring(self.op.func(terms[1],terms[2]))

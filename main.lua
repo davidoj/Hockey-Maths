@@ -23,10 +23,7 @@ function love.load(arg)
 
    q = question_db:getRandomQuestion()
    ans = ''
-
-   table.insert(r_stick.actions,r_stick.waitForBall)
-   table.insert(r_stick.actions,r_stick.seekBall)
-
+ 
    total_attempts = 0
 
    alpha = 0.5
@@ -41,11 +38,14 @@ function love.keypressed(key)
          ans = ans .. key
       end
    end
+   if key == 'backspace' and #ans>0 then
+      ans = string.sub(ans,1,-2)
+   end
+   
    if key == 'return' and ans ~= '' then
       q.trial_answer = ans
       local r = q:checkAnswer(ans)
       ans = ''
-      table.insert(q.attempts,total_attempts)
       total_attempts = total_attempts + 1
       if r==1 then
          timer = love.timer.getTime()

@@ -159,6 +159,10 @@ function setupObjectsAndBorders()
    r_stick = stick:create(750,200,-1)
    ball = ball:create()
 
+   table.insert(r_stick.actions,r_stick.waitForBall)
+   table.insert(r_stick.actions,r_stick.seekBall)
+
+
 end
 
 -- a special update call for sticks and questions when the ball collides with a stick or either side of the screen
