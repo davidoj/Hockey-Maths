@@ -21,13 +21,17 @@ function love.load(arg)
    --    questions = {}
    -- end
 
-   q = question_db:newQuestion()
+   q = question_db:getRandomQuestion()
    ans = ''
 
    table.insert(r_stick.actions,r_stick.waitForBall)
    table.insert(r_stick.actions,r_stick.seekBall)
 
+   total_attempts = 0
 
+   alpha = 0.5
+
+   timer = love.timer.getTime()
 
 end
 
@@ -37,12 +41,15 @@ function love.keypressed(key)
          ans = ans .. key
       end
    end
-   if key == 'return' then
+   if key == 'return' and ans ~= '' then
+      q.trial_answer = ans
       local r = q:checkAnswer(ans)
       ans = ''
+      table.insert(q.attempts,total_attempts)
+      total_attempts = total_attempts + 1
       if r==1 then
-         table.insert(question_db,q)
-         q = question_db:newQuestion()
+         timer = love.timer.getTime()
+         q = question_db:getNewQuestion()
          table.insert(l_stick.actions,l_stick.waitForBall)
          table.insert(l_stick.actions,l_stick.seekBall)
       end
