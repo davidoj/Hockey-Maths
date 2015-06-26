@@ -14,14 +14,10 @@ function love.load(arg)
    font_lastTime = love.graphics.newFont('art/KGTheLastTime.ttf',35)
    love.graphics.setFont(font_lastTime)
    setupObjectsAndBorders()
+   
+   qdb = initialiseQuestionDB()
 
-   -- if love.filesystem.exists('Questions.lua') then
-   --    questions = love.filesystem.load('Questions.lua')
-   -- else
-   --    questions = {}
-   -- end
-
-   q = question_db:getRandomQuestion()
+   q = qdb:getRandomQuestion()
    ans = ''
  
    total_attempts = 0
@@ -49,7 +45,7 @@ function love.keypressed(key)
       total_attempts = total_attempts + 1
       if r==1 then
          timer = love.timer.getTime()
-         q = question_db:selectRandomByWeight()
+         q = qdb:selectRandomByWeight()
          table.insert(l_stick.actions,l_stick.waitForBall)
          table.insert(l_stick.actions,l_stick.seekBall)
       end
@@ -80,5 +76,5 @@ end
 
 
 function love.quit()
-   --love.filesystem.write('Questions.lua',serialize(questions))
+   love.filesystem.write('qdb.lua',serialize(qdb))
 end

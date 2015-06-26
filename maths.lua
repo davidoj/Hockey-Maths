@@ -42,7 +42,20 @@ local question = {
 
 local question_mt = { __index = question }
 
-question_db = {question}
+local question_db = {}
+local question_db_mt = { __index = question_db }
+
+function initialiseQuestionDB()
+   local qdb
+   if love.filesystem.exists('qdb.lua') then
+      qdb = love.filesystem.load('qdb.lua')
+   else
+      qdb = {question}
+   end
+   setmetatable(qdb,question_db_mt)
+   return qdb
+end
+
 
 local function opComplement(op)
    if op.sym == opPlus.sym then return opMinus
