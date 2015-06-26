@@ -49,7 +49,7 @@ function love.keypressed(key)
       total_attempts = total_attempts + 1
       if r==1 then
          timer = love.timer.getTime()
-         q = question_db:getNewQuestion()
+         q = question_db:selectRandomByWeight()
          table.insert(l_stick.actions,l_stick.waitForBall)
          table.insert(l_stick.actions,l_stick.seekBall)
       end

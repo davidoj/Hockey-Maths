@@ -54,12 +54,20 @@ local function opComplement(op)
 end
 
 local function isCommutative(op)
-   return (op.sym == '+' or op.sym == '*')
+   return (op.sym == '+' or op.sym == string.char(0xc3,0x97))
+end
+
+function question:copy()
+   local copy = deepcopy(self)
+   copy.accuracy = 0
+   copy.response_time = 10
+   copy.attempts = {}
+   return copy
 end
 
 function question:commute()
    -- assert(isCommutative(self.op), 'attempting to commute noncommutative operation')
-   local newq = deepcopy(self)
+   local newq = self:copy()
    if isCommutative(self.op) then
       newq.terms[2] = self.terms[1]
       newq.terms[1] = self.terms[2]
@@ -71,7 +79,7 @@ function question:commute()
 end
 
 function question:complement()
-   local newq = deepcopy(self)
+   local newq = self:copy()
    newq.terms[1] = self.terms[3]
    newq.terms[3] = self.terms[1]
    newq.op = opComplement(self.op)
@@ -79,14 +87,15 @@ function question:complement()
 end
 
 function question:incrementTerm(pos)
-   local newq = deepcopy(self)
+   local newq = self:copy()
    local p = pos or 1
    newq.terms[p] = newq.terms[p] + 1
+   newq.terms[3] = newq.op.func(newq.terms[1],newq.terms[2])
    return newq
 end
    
 function question:movePrompt()
-   local newq = deepcopy(self)
+   local newq = self:copy()
    newq.free = (self.free+1)%3 + 1
    return newq
 end
@@ -121,22 +130,27 @@ function question:checkAnswer()
    local terms = deepcopy(self.terms)
    terms[self.free] = self.trial_answer
    local test = tostring(self.op.func(terms[1],terms[2]))
+   print('Prev: accuracy = ' .. self.accuracy .. ' rt = ' .. self.response_time .. '\n')
    if test == tostring(terms[3]) then
       tr = love.timer.getTime() - timer
-      self.response_time = self.response_time + alpha*(tr - self.response_time)
+      self.response_time = math.min(10,self.response_time + alpha*(tr - self.response_time))
       self.accuracy = self.accuracy + alpha*(1-self.accuracy)
+      print('New: accuracy = ' .. self.accuracy .. ' rt = ' .. self.response_time .. '\n')
       return 1
    else
       self.accuracy = self.accuracy + alpha*(-self.accuracy)
+      print('New: accuracy = ' .. self.accuracy .. ' rt = ' .. self.response_time .. '\n')
       return 0
    end
 end
 
 function question:computeWeight()
    local last_try = self.attempts[#self.attempts]
-   local c1, c2, c3 = 1,1,1
-   local f1 = math.min(1/4, math.exp(c3*self.response_time/(1.01 - self.accuracy)))
-   return math.min(f1, (total_attempts - last_try)*f1)
+   local c1 = 14
+   local tr = math.max(self.response_time,0.51)
+   --local f1 = math.min(1/4, math.exp(-c3/(self.response_time*(1.01 - self.accuracy))))
+   local f1 = math.min(1/4, math.exp(-c1/(tr-0.5)))
+   return math.min(f1, 0.1*(total_attempts - last_try)*f1)
 end
 
 function question_db:isValid(question)
@@ -150,7 +164,10 @@ function question_db:isValid(question)
          return false
       end
    end
-   return true 
+   local lhs = tostring(question.op.func(question.terms[1],question.terms[2]))
+   local rhs = tostring(question.terms[3])
+   assert(lhs == rhs, 'question is unbalanced, lhs '  .. lhs .. ' rhs ' .. rhs)
+   return true
 end
 
 
@@ -173,7 +190,7 @@ function question_db:getNewQuestion()
    local valid = false
    while not valid do
       for i, fun in ipairs(modifiers) do
-         if math.random() > weights[i] then
+         if math.random() < weights[i] then
             prototype = fun(prototype)
          end
       end
@@ -191,14 +208,16 @@ function question_db:selectRandomByWeight()
    local cum = 0
    local trial = math.random()
    local quest = nil
-   for _, q in self do
+   for _, q in ipairs(self) do
       cum = cum + q:computeWeight()
+      print('weight ' .. q:computeWeight() .. ' trial ' .. trial .. ' cum ' .. cum)
       if cum > trial then 
          quest = q
          break 
       end
    end
    if not quest then
+      print("new question")
       quest = self:getNewQuestion()
    end
    return quest
