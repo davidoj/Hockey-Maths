@@ -4,6 +4,7 @@ require "objects"
 require "util"
 require "math"
 
+
 -- Collision detection & handling --
 
 -- Checks for collision between reactive and 'static' object, returns index of face of static object

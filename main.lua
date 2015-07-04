@@ -5,6 +5,7 @@ require "maths"
 require "objects"
 require "behaviour"
 require "util"
+require "input"
 serialize = require 'Ser.ser'
 
 function love.load(arg)
@@ -15,9 +16,9 @@ function love.load(arg)
    love.graphics.setFont(font_lastTime)
    setupObjectsAndBorders()
    
-   qdb = initialiseQuestionDB()
+   pdb = initialiseQuestionDB()
 
-   q = qdb:getRandomQuestion()
+   q = pdb:getRandomQuestion()
    ans = ''
  
    total_attempts = 0
@@ -29,28 +30,10 @@ function love.load(arg)
 end
 
 function love.keypressed(key)
-   for _,value in ipairs({'1','2','3','4','5','6','7','8','9','0','-'}) do
-      if value == key then
-         ans = ans .. key
-      end
+   if q.wait_for_input then
+      handle_question_input(key,q)
    end
-   if key == 'backspace' and #ans>0 then
-      ans = string.sub(ans,1,-2)
-   end
-   
-   if key == 'return' and ans ~= '' then
-      q.trial_answer = ans
-      local r = q:checkAnswer(ans)
-      ans = ''
-      total_attempts = total_attempts + 1
-      if r==1 then
-         timer = love.timer.getTime()
-         q = qdb:selectRandomByWeight()
-         table.insert(l_stick.actions,l_stick.waitForBall)
-         table.insert(l_stick.actions,l_stick.seekBall)
-      end
-   end
-   
+
 end
    
 
@@ -65,8 +48,7 @@ end
 
 
 function love.draw(dt)
-   love.graphics.print(q:toString(),350,200)
-   love.graphics.print(ans,350,250)
+   display(q)
    for _, obj in ipairs({l_stick,r_stick,ball}) do
       draw_object(obj)
       --love.graphics.polygon('line',obj.vertices)
@@ -76,5 +58,29 @@ end
 
 
 function love.quit()
-   love.filesystem.write('qdb.lua',serialize(qdb))
+   love.filesystem.write('pdb.lua',serialize(pdb))
+end
+
+
+function onCorrectAnswer()
+   
+   timer = love.timer.getTime()
+   q = pdb:selectRandomByWeight()
+   q.trial_answer = ''
+   table.insert(l_stick.actions,l_stick.waitForBall)
+   table.insert(l_stick.actions,l_stick.seekBall)
+
+   
+
+end
+
+function onBallCollision(ccode) 
+   l_stick:update(0,1)
+   r_stick:update(0,1)
+   
+   if ccode[1] == 1 then 
+      table.insert(r_stick.actions,r_stick.waitForBall)
+      table.insert(r_stick.actions,r_stick.seekBall)
+   end
+   
 end
