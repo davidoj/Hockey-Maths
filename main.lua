@@ -1,23 +1,27 @@
 --debug = true
 
-require "maths"
-require "objects"
-require "behaviour"
-require "util"
-require "input"
-serialize = require 'Ser.ser'
+
 
 function love.load(arg)
+
+   require "questions/question"
+   require "questions/question_db"
+   require "game/objects"
+   require "game/input"
+   require "game/behaviour"
+   require "game/questioner"
+   require "util/util"
+   serialize = require 'util/ser'
    
    love.keyboard.setKeyRepeat( disable )
 
-   font_lastTime = love.graphics.newFont('art/KGTheLastTime.ttf',35)
+   font_lastTime = love.graphics.newFont('fonts/KGTheLastTime.ttf',35)
    love.graphics.setFont(font_lastTime)
    setupObjectsAndBorders()
    
-   pdb = initialiseParamDB()
+   qdb = initialiseQuestionDB()
 
-   q = question:create()
+   q = questioner:init(qdb)
    ans = ''
  
    total_attempts = 0
@@ -30,7 +34,7 @@ end
 
 function love.keypressed(key)
    if q.wait_for_input then
-      handle_question_input(key,q,pdb)
+      handle_question_input(key,q,qdb)
    end
 
 end
@@ -57,21 +61,9 @@ end
 
 
 function love.quit()
-   love.filesystem.write('pdb.lua',serialize(pdb))
+   love.filesystem.write('qdb.lua',serialize(qdb))
 end
 
-
-function onCorrectAnswer()
-   
-   timer = love.timer.getTime()
-   q = pdb:selectRandomByWeight()
-   q.trial_answer = ''
-   table.insert(l_stick.actions,l_stick.waitForBall)
-   table.insert(l_stick.actions,l_stick.seekBall)
-
-   
-
-end
 
 function onBallCollision(ccode) 
    l_stick:update(0,1)

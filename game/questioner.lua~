@@ -1,0 +1,11 @@
+
+require "objects"
+
+
+question = object:create()
+
+question.trial_answer = ''
+question.params = parameters
+question.wait_for_input = true
+
+local question_mt = { __index = question }

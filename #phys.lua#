@@ -1,4 +1,0 @@
--- Collision detection
-
-require "math"
-require "objects"
