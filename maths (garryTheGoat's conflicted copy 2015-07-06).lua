@@ -30,17 +30,17 @@ local parameters = {
    op = opPlus,
    accuracy = 0,
    response_time = 10,
-   attempts = {},
-   free = 1
+   attempts = {}
 }
 
 local parameters_mt = { __index = parameters }
 
-question = object:create()
+local question = object:create()
 
+question.free = 1
 question.trial_answer = ''
 question.params = parameters
-question.wait_for_input = true
+question.wait_for_input = nil
 
 local question_mt = { __index = question }
 
@@ -49,12 +49,12 @@ local param_db_mt = { __index = param_db }
 
 function initialiseParamDB()
    local pdb
---   if love.filesystem.exists('pdb.lua') then
- --     save_pdb = love.filesystem.load('pdb.lua')
- --     pdb = save_pdb()
- --  else
-   pdb = {question.params}
- --  end
+   if love.filesystem.exists('pdb.lua') then
+      save_pdb = love.filesystem.load('pdb.lua')
+      pdb = save_pdb()
+   else
+   pdb = {question}
+   end
    setmetatable(pdb,param_db_mt)
    return pdb
 end
@@ -78,7 +78,7 @@ function question:display()
    local terms = deepcopy(self.params.terms)
    if self.wait_for_input then
       love.graphics.setColor(255,255,255,255)
-      terms[self.params.free] = '_'
+      terms[self.free] = '_'
    else 
       love.graphics.setColor(0, 255, 0, 255)
    end
@@ -87,72 +87,74 @@ function question:display()
 
 
    love.graphics.print(str,350,200)
-   love.graphics.print(self.trial_answer,350,250)
+   love.graphics.print(q.trial_answer,350,250)
 end
 
-function parameters:copy()
+function question:copy()
    local copy = deepcopy(self)
-   copy.accuracy = 0
-   copy.response_time = 10
-   copy.attempts = {}
+   copy.params.accuracy = 0
+   copy.params.response_time = 10
+   copy.params.attempts = {}
    return copy
 end
 
-function parameters:commute()
+function question:commute()
    -- assert(isCommutative(self.op), 'attempting to commute noncommutative operation')
    local newq = self:copy()
    if isCommutative(self.op) then
-      newq.terms[2] = self.terms[1]
-      newq.terms[1] = self.terms[2]
+      newq.params.terms[2] = self.params.terms[1]
+      newq.params.terms[1] = self.params.terms[2]
    else
-      newq.terms[2] = self.terms[3]
-      newq.terms[3] = self.terms[2]
+      newq.params.terms[2] = self.params.terms[3]
+      newq.params.terms[3] = self.params.terms[2]
    end
    return newq
 end
 
-function parameters:complement()
+function question:complement()
    local newq = self:copy()
-   newq.terms[1] = self.terms[3]
-   newq.terms[3] = self.terms[1]
+   newq.params.terms[1] = self.params.terms[3]
+   newq.params.terms[3] = self.params.terms[1]
    newq.op = opComplement(self.op)
    return newq
 end
 
-function parameters:incrementTerm(pos)
+function question:incrementTerm(pos)
    local newq = self:copy()
    local p = pos or 1
-   newq.terms[p] = newq.terms[p] + 1
-   newq.terms[3] = newq.op.func(newq.terms[1],newq.terms[2])
+   newq.params.terms[p] = newq.params.terms[p] + 1
+   newq.params.terms[3] = newq.op.func(newq.params.terms[1],newq.params.terms[2])
    return newq
 end
    
-function parameters:movePrompt()
+function question:movePrompt()
    local newq = self:copy()
    newq.free = (self.free+1)%3 + 1
    return newq
 end
 
-local modifiers = {parameters.commute,parameters.complement,parameters.incrementTerm,parameters.movePrompt}
+local modifiers = {question.commute,question.complement,question.incrementTerm,question.movePrompt}
 
 function question:create()
-   return deepcopy(question)
+   q = {}
+   setmetatable(q,question_mt)
+   return q
 end
 
 
-function parameters:isEqual(q)
-   return (self.terms[1] == q.terms[1] 
-              and self.terms[2] == q.terms[2] 
-              and self.terms[3] == q.terms[3] 
+function question:isEqual(q)
+   return (self.params.terms[1] == q.params.terms[1] 
+              and self.params.terms[2] == q.params.terms[2] 
+              and self.params.terms[3] == q.params.terms[3] 
               and self.op.sym == q.op.sym)
 end
 
 
 function question:checkAnswer()
-   table.insert(self.params.attempts,total_attempts)
+   table.insert(q.attempts,total_attempts)
    local terms = deepcopy(self.params.terms)
-   terms[self.params.free] = self.trial_answer
-   local test = tostring(self.params.op.func(terms[1],terms[2]))
+   terms[self.free] = self.trial_answer
+   local test = tostring(self.op.func(terms[1],terms[2]))
    print('Prev: accuracy = ' .. self.params.accuracy .. ' rt = ' .. self.params.response_time .. '\n')
    if test == tostring(terms[3]) then
       tr = love.timer.getTime() - timer
@@ -168,7 +170,7 @@ function question:checkAnswer()
 end
 
 function question:computeWeight()
-   local last_try = self.params.attempts[#self.params.attempts]
+   local last_try = self.attempts[#self.attempts]
    local c1 = 14
    local tr = math.max(self.params.response_time,0.51)
    --local f1 = math.min(1/4, math.exp(-c3/(self.params.response_time*(1.01 - self.params.accuracy))))
@@ -177,43 +179,35 @@ function question:computeWeight()
 end
 
 function question:getNewParams(pdb)
-   return function (q,dt)
-      self.params = pdb:getNewQuestion()
-      table.remove(self.actions,1)
-      return 0
-   end
+   return function ()
+      self.params = pdb.getNewQuestion()
+      end
 end
 
-function question:beginWaiting(t)
+function question:wait_for_input(t)
    t = t or math.huge
-   return function (q,dt) 
-      self.wait_for_input = true
-      return t 
-   end
+   return function () self.wait_for_input = true return t end
 end
 
 function question:pause_on_correct(t)
    t = t or math.huge
-   return function (q,dt) self.wait_for_input = nil return t end
+   return function () self.wait_for_input = nil return t end
 end
 
-function question:idle(dt)
-   return self:beginWaiting()()
-end
       
 function param_db:isValid(question)
    for _, q in ipairs(self) do
-      if parameters.isEqual(question,q) then
+      if question.isEqual(question,q) then
          return false
       end
    end
-   for _, t in ipairs(question.terms) do
+   for _, t in ipairs(question.params.terms) do
       if tonumber(t) < 0 then
          return false
       end
    end
-   local lhs = tostring(question.op.func(question.terms[1],question.terms[2]))
-   local rhs = tostring(question.terms[3])
+   local lhs = tostring(question.op.func(question.params.terms[1],question.params.terms[2]))
+   local rhs = tostring(question.params.terms[3])
    assert(lhs == rhs, 'question is unbalanced, lhs '  .. lhs .. ' rhs ' .. rhs)
    return true
 end
@@ -233,10 +227,11 @@ function param_db:queryTerms(positions,min_success)
    return terms
 end
 
-weights = {0.5,0.5,0.5,0.5}
-
 function param_db:getNewQuestion()
-   local prototype = self[math.random(#self)]
+   local prototype
+   while not prototype do
+      prototype = self:selectRandomByWeight()
+   end
    local valid = false
    while not valid do
       for i, fun in ipairs(modifiers) do
@@ -270,6 +265,5 @@ function param_db:selectRandomByWeight()
       print("new question")
       quest = self:getNewQuestion()
    end
-   print(quest)
    return quest
 end

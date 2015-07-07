@@ -1,4 +1,3 @@
-
 --debug = true
 
 require "maths"
@@ -16,9 +15,9 @@ function love.load(arg)
    love.graphics.setFont(font_lastTime)
    setupObjectsAndBorders()
    
-   pdb = initialiseQuestionDB()
+   pdb = initialiseParamDB()
 
-   q = pdb:getRandomQuestion()
+   q = question:create()
    ans = ''
  
    total_attempts = 0
@@ -31,7 +30,7 @@ end
 
 function love.keypressed(key)
    if q.wait_for_input then
-      handle_question_input(key,q)
+      handle_question_input(key,q,pdb)
    end
 
 end
@@ -42,13 +41,13 @@ function love.update(dt)
    ball:update(dt)
    l_stick:update(dt)
    r_stick:update(dt)
-
+   q:update(dt)
 
 end
 
 
 function love.draw(dt)
-   display(q)
+   q:display()
    for _, obj in ipairs({l_stick,r_stick,ball}) do
       draw_object(obj)
       --love.graphics.polygon('line',obj.vertices)
@@ -77,7 +76,8 @@ end
 function onBallCollision(ccode) 
    l_stick:update(0,1)
    r_stick:update(0,1)
-   
+   q:update(0,1)
+
    if ccode[1] == 1 then 
       table.insert(r_stick.actions,r_stick.waitForBall)
       table.insert(r_stick.actions,r_stick.seekBall)

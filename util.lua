@@ -17,6 +17,15 @@ function print_table(tbl)
 end
 
 
+function copy(orig)
+   local copy = {}
+   for i, v in pairs(orig) do
+      copy[i] = v
+   end
+   setmetatable(copy,getmetatable(orig))
+   return copy
+end
+
 function deepcopy(orig)
     local orig_type = type(orig)
     local copy
@@ -30,4 +39,22 @@ function deepcopy(orig)
         copy = orig
     end
     return copy
+end
+
+function inheritsFrom( baseClass )
+
+    local new_class = {}
+    local class_mt = { __index = new_class }
+
+    function new_class:create()
+        local newinst = {}
+        setmetatable( newinst, class_mt )
+        return newinst
+    end
+
+    if baseClass then
+        setmetatable( new_class, { __index = baseClass } )
+    end
+
+    return new_class
 end

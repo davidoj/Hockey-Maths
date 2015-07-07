@@ -1,5 +1,7 @@
 -- methods for creating and updating objects in game
 
+require "math"
+require "util"
 
 object = {}
 
@@ -14,31 +16,30 @@ function object:create()
    return obj
 end
 
-local rigid_body = object:create()
-
-rigid_body.x = 0
-rigid_body.y = 0
-rigid_body.w = 0
-rigid_body.h = 0
-rigid_body.ox = 0
-rigid_body.oy = 0
-rigid_body.theta = 0
-rigid_body.xdot = 0
-rigid_body.ydot = 0
-rigid_body.thetadot = 0
-rigid_body.thetadotmax = 1.5
-rigid_body.xaccel = 0
-rigid_body.yaccel = 0
-rigid_body.thetaaccel = 0
-
+rigid_body = {}
 local rigid_body_mt = {__index = rigid_body }
+setmetatable(rigid_body,object_mt)
 
 function rigid_body:create()
-   local rb = {}
-   for i, v in pairs(rigid_body) do
-      rb.i = v
-   end
-   setmetatable(rb,rigid_body_mt)
+   local rb = object:create()
+
+   rb.x = 0
+   rb.y = 0
+   rb.w = 0
+   rb.h = 0
+   rb.ox = 0
+   rb.oy = 0
+   rb.theta = 0
+   rb.xdot = 0
+   rb.ydot = 0
+   rb.thetadot = 0
+   rb.thetadotmax = 1.5
+   rb.xaccel = 0
+   rb.yaccel = 0
+   rb.thetaaccel = 0
+
+
+   return rb
 end
 
 function rigid_body:updateVertices()
@@ -60,10 +61,14 @@ function rigid_body:updateVertices()
 end
 
 
-local stick = {}
+stick = {}
+stick_mt = {__index = stick}
+setmetatable(stick,rigid_body_mt)
 
 function stick:create(x,y,side)
    local st = rigid_body:create()
+
+   setmetatable(st,stick_mt)
 
    st.w = 30
    st.h = 130
@@ -76,14 +81,17 @@ function stick:create(x,y,side)
    st.side = side
 
    st:updateVertices()
+
    return st
 end
 
-local ball = {}
+ball = {}
+ball_mt = { __index = ball }
+setmetatable(ball,rigid_body_mt)
 
 function ball:create()
    local b = rigid_body:create()
-
+   setmetatable(b,ball_mt)
    b.x = 10
    b.y = 10
    b.w = 30
@@ -93,72 +101,9 @@ function ball:create()
    b.img = love.graphics.newImage('art/redBall.png')
 
    b:updateVertices()
-   b.actions = {}
+
    return b
 end
-
-function object:update(dt)
-   if (self.e_time >= self.wait) or
-      (ball_bounced and self.wait == math.huge)
-   then
-      if self.wait > 0 then -- get new action
-         table.remove(self.actions,1)  
-      end
-      self.e_time = 0
-      self.wait = self:execute(self.actions[1],dt)
-   else 
-      self:execute(self.actions[1],dt)
-   end   
-end
-
-
-function object:execute(action,dt)
-   local t = 0
-   if action ~= nil then
-      t = action(self,dt)       
-   else 
-      self:idle(dt)      
-   end
-   return t
-end
-
-
-function rigid_body:update(dt)
-   local xdot = self.xdot*dt or 0
-   local ydot = self.ydot*dt or 0
-   local thetadot = self.thetadot*dt or 0
-   self.x = self.x + xdot
-   self.y = self.y + ydot
-   self.theta = self.theta + thetadot
-
-   self.xdot = self.xdot + self.xaccel*dt
-   self.ydot = self.ydot + self.yaccel*dt
-   self.thetadot = self.thetadot + self.thetaaccel*dt
-   self:updateVertices()
-end
-
-function ball:update(dt)
-   
-   self:HandleObjectCollision(l_stick,dt)
-   self:HandleObjectCollision(r_stick,dt)
-   self:HandleWallCollision(borders)
-   
-   rigid_body.update(self,dt)
-end
-
-function stick:update(dt,ball_bounced)
-      
-
-   if self.side == 1 then
-      while self.theta > 3*math.pi/2 do self.theta = self.theta - 2*math.pi end
-   end
-   if self.side == -1 then
-      while self.theta < math.pi/2 do self.theta = self.theta + 2*math.pi end
-   end
-   rigid_body.update(self,dt) 
-  
-end
-   
 
 function draw_object(obj)
    local theta = obj.theta or 0
@@ -183,4 +128,34 @@ function setupObjectsAndBorders()
 
 end
 
--- a special update call for sticks and questions when the ball collides with a stick or either side of the screen
+
+function object:idle(dt)
+   return 0
+end
+
+
+function object:update(dt,ball_bounced)
+   if (self.e_time >= self.wait) or
+      (ball_bounced and self.wait == math.huge)
+   then
+      if self.wait > 0 then -- get new action
+         table.remove(self.actions,1)  
+      end
+      self.e_time = 0
+      self.wait = self:execute(self.actions[1],dt)
+   else 
+      self:execute(self.actions[1],dt)
+   end   
+end
+
+
+function object:execute(action,dt)
+   local t = 0
+   if action ~= nil then
+      t = action(self,dt)       
+   else
+      self:idle(dt)      
+   end
+   return t
+
+end

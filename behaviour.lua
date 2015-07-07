@@ -29,7 +29,6 @@ function ObjectCollision(objR,objS)
    if maxMin < minMax then  -- collision
       for i, var in ipairs {tx1,ty1,tx2,ty2} do
          if var == maxMin and var >= 0 then
-            --minT = var
             cId = i
          end
       end
@@ -63,7 +62,7 @@ end
 
 -- Reflects object from vertical or horizontal surface
 
-function object:ReflectFromSurface(ccode)
+function rigid_body:ReflectFromSurface(ccode)
    if ccode[1]~=0 then
       self.xdot = math.abs(self.xdot)*ccode[1]
    end
@@ -72,7 +71,7 @@ function object:ReflectFromSurface(ccode)
    end
 end
 
-function ball:HandleObjectCollision(obj,dt)
+function rigid_body:HandleObjectCollision(obj,dt)
    local tc, sc = ObjectCollision(self,obj)
 
    if tc<dt and tc>=0 and sc then
@@ -81,9 +80,9 @@ function ball:HandleObjectCollision(obj,dt)
    end
 end
 
-function object:HandleWallCollision(borders)
+function rigid_body:HandleWallCollision(borders)
    local wc = WallCollision(self,borders)
-   if wc then 
+   if wc ~= {0,0} then 
       self:ReflectFromSurface(wc) 
       if wc[1] ~= 0 then
          onBallCollision(wc)
@@ -186,3 +185,40 @@ function stick:waitForBall(dt)
 
    return delta_t
 end
+
+
+function rigid_body:update(dt,ball_bounced)
+   object.update(self,dt,ball_bounced)
+   local xdot = self.xdot*dt or 0
+   local ydot = self.ydot*dt or 0
+   local thetadot = self.thetadot*dt or 0
+   self.x = self.x + xdot
+   self.y = self.y + ydot
+   self.theta = self.theta + thetadot
+
+   self.xdot = self.xdot + self.xaccel*dt
+   self.ydot = self.ydot + self.yaccel*dt
+   self.thetadot = self.thetadot + self.thetaaccel*dt
+   self:updateVertices()
+end
+
+function ball:update(dt)
+   self:HandleObjectCollision(l_stick,dt)
+   self:HandleObjectCollision(r_stick,dt)
+   self:HandleWallCollision(borders)
+
+   rigid_body.update(self,dt)
+end
+
+function stick:update(dt,ball_bounced)
+
+   if self.side == 1 then
+      while self.theta > 3*math.pi/2 do self.theta = self.theta - 2*math.pi end
+   end
+   if self.side == -1 then
+      while self.theta < math.pi/2 do self.theta = self.theta + 2*math.pi end
+   end
+   rigid_body.update(self,dt,ball_bounced) 
+  
+end
+
