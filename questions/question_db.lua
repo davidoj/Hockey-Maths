@@ -70,13 +70,13 @@ function question_db:getRandomQuestion()
    return self[math.random(#self)]
 end
 
-function question_db:selectRandomByWeight()
+function question_db:selectRandomByWeight(total_attempts)
    local cum = 0
    local trial = math.random()
    local quest = nil
    for _, q in ipairs(self) do
-      cum = cum + q:computeWeight()
-      print('weight ' .. q:computeWeight() .. ' trial ' .. trial .. ' cum ' .. cum)
+      cum = cum + q:computeWeight(total_attempts)
+      print('weight ' .. q:computeWeight(total_attempts) .. ' trial ' .. trial .. ' cum ' .. cum)
       if cum > trial then 
          quest = q
          break 

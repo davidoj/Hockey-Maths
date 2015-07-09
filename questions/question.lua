@@ -89,12 +89,19 @@ function question:movePrompt()
    return newq
 end
 
-local modifiers = {question.commute,question.complement,question.incrementTerm,question.movePrompt}
-
-
 function question:isEqual(q)
    return (self.terms[1] == q.terms[1] 
               and self.terms[2] == q.terms[2] 
               and self.terms[3] == q.terms[3] 
               and self.op.sym == q.op.sym)
+end
+
+
+function question:computeWeight(total_attempts)
+   local last_try = self.attempts[#self.attempts]
+   local c1 = 14
+   local tr = math.max(self.response_time,0.51)
+   --local f1 = math.min(1/4, math.exp(-c3/(self.question.response_time*(1.01 - self.question.accuracy))))
+   local f1 = math.min(1/4, math.exp(-c1/(tr-0.5)))
+   return math.min(f1, 0.1*(total_attempts - last_try)*f1)
 end

@@ -7,8 +7,9 @@ function love.load(arg)
    require "questions/question"
    require "questions/question_db"
    require "game/objects"
-   require "game/input"
-   require "game/behaviour"
+   require "game/stick"
+   require "game/ball"
+   require "game/game"
    require "game/questioner"
    require "util/util"
    serialize = require 'util/ser'
@@ -17,26 +18,15 @@ function love.load(arg)
 
    font_lastTime = love.graphics.newFont('fonts/KGTheLastTime.ttf',35)
    love.graphics.setFont(font_lastTime)
-   setupObjectsAndBorders()
    
-   qdb = initialiseQuestionDB()
-
-   q = questioner:init(qdb)
-   ans = ''
+   game_init()
  
-   total_attempts = 0
-
-   alpha = 0.5
-
    timer = love.timer.getTime()
 
 end
 
 function love.keypressed(key)
-   if q.wait_for_input then
-      handle_question_input(key,q,qdb)
-   end
-
+   q:handleInput(key,qdb)
 end
    
 
@@ -64,15 +54,3 @@ function love.quit()
    love.filesystem.write('qdb.lua',serialize(qdb))
 end
 
-
-function onBallCollision(ccode) 
-   l_stick:update(0,1)
-   r_stick:update(0,1)
-   q:update(0,1)
-
-   if ccode[1] == 1 then 
-      table.insert(r_stick.actions,r_stick.waitForBall)
-      table.insert(r_stick.actions,r_stick.seekBall)
-   end
-   
-end

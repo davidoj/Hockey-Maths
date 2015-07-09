@@ -10,6 +10,8 @@ function questioner:init(qdb)
       trial_answer = '',
       question = qdb:getRandomQuestion(),
       wait_for_input = true,
+      db = qdb,
+      total_attempts = 0
    }
 
    setmetatable(q,questioner_mt)
@@ -19,24 +21,63 @@ end
 function questioner:display()
 
    local terms = deepcopy(self.question.terms)
+   local str
    if self.wait_for_input then
-      love.graphics.setColor(255,255,255,255)
       terms[self.question.free] = '_'
+      str = terms[1] .. self.question.op.sym .. terms[2] .. '=' .. terms[3]
+      love.graphics.print(str,350,200)
    else 
+      str = terms[1] .. self.question.op.sym .. terms[2] .. '=' .. terms[3]
       love.graphics.setColor(0, 255, 0, 255)
+      love.graphics.print(str,350,200)
+      love.graphics.setColor(255, 255,255, 255)
    end
       
-   local str = terms[1] .. self.question.op.sym .. terms[2] .. '=' .. terms[3]
-
-
-   love.graphics.print(str,350,200)
    love.graphics.print(self.trial_answer,350,250)
 
 end
 
 
+function questioner:handleInput(key)
+   if self.wait_for_input then
+      for _,value in ipairs({'1','2','3','4','5','6','7','8','9','0','-'}) do
+         if value == key then
+            self.trial_answer = self.trial_answer .. key
+         end
+      end
+
+      if key == 'backspace' and #ans>0 then
+         self.trial_answer = string.sub(self.trial_answer,1,-2)
+      end
+      
+      if key == 'return' and self.trial_answer ~= '' then
+         local r = self:checkAnswer()
+         self.trial_answer = ''
+         table.insert(self.question.attempts,self.total_attempts)
+         self.total_attempts = self.total_attempts + 1
+         if r==1 then
+            self:sendNote({event = 'correct_answer'})
+         end
+      end
+   end
+end
+
+
+
+function questioner:handleNote(from, note)
+   if note['event'] == 'collision' and
+      note['ccode'][1] == -1
+   then
+      self:update(0,1)
+   end
+
+   if note['event'] == 'correct_answer' then
+      table.insert(self.actions,self:pauseOnCorrect())
+      table.insert(self.actions,self:getNewQuestion())
+   end
+end
+
 function questioner:checkAnswer()
-   table.insert(self.question.attempts,total_attempts)
    local terms = deepcopy(self.question.terms)
    terms[self.question.free] = self.trial_answer
    local test = tostring(self.question.op.func(terms[1],terms[2]))
@@ -54,36 +95,24 @@ function questioner:checkAnswer()
    end
 end
 
-function questioner:computeWeight()
-   local last_try = self.question.attempts[#self.question.attempts]
-   local c1 = 14
-   local tr = math.max(self.question.response_time,0.51)
-   --local f1 = math.min(1/4, math.exp(-c3/(self.question.response_time*(1.01 - self.question.accuracy))))
-   local f1 = math.min(1/4, math.exp(-c1/(tr-0.5)))
-   return math.min(f1, 0.1*(total_attempts - last_try)*f1)
-end
-
-function questioner:getNewQuestion(qdb)
-   return function (q,dt)
-      self.question = qdb:getNewQuestion()
+function questioner:getNewQuestion()
+   return function (dt)
+      self.question = self.db:selectRandomByWeight(self.total_attempts)
       table.remove(self.actions,1)
       return 0
    end
 end
 
-function questioner:beginWaiting(t)
-   t = t or math.huge
-   return function (q,dt) 
+function questioner:idle()
+   local t = math.huge
+   return function (dt) 
       self.wait_for_input = true
       return t 
    end
 end
 
-function questioner:pause_on_correct(t)
-   t = t or math.huge
-   return function (q,dt) self.wait_for_input = nil return t end
-end
-
-function questioner:idle(dt)
-   return self:beginWaiting()()
+function questioner:pauseOnCorrect()
+   print('correct!')
+   local t =  math.huge
+   return function (dt) self.wait_for_input = nil return t end
 end
