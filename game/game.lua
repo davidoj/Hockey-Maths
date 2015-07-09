@@ -8,8 +8,6 @@ function game_init()
   
    q = questioner:init(qdb)
    
-   total_attempts = 0
-
    alpha = 0.5
 
    borders = {
@@ -33,6 +31,7 @@ function game_init()
    q:addObserver(l_stick)
    q:addObserver(q)
 
+   game_objects = {q,ball,l_stick,r_stick}
 
 end
 

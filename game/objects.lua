@@ -55,7 +55,4 @@ function object:idle(dt)
    return function () return 0 end
 end
 
-function draw_object(obj)
-   local theta = obj.theta or 0
-   love.graphics.draw(obj.img,obj.x,obj.y,theta,1,1,obj.ox,obj.oy)
-end
+

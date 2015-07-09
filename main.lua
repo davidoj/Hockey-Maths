@@ -21,8 +21,6 @@ function love.load(arg)
    
    game_init()
  
-   timer = love.timer.getTime()
-
 end
 
 function love.keypressed(key)
@@ -32,19 +30,16 @@ end
 
 function love.update(dt)
 
-   ball:update(dt)
-   l_stick:update(dt)
-   r_stick:update(dt)
-   q:update(dt)
+   for _, o in pairs(game_objects) do
+      o:update(dt)
+   end
 
 end
 
 
 function love.draw(dt)
-   q:display()
-   for _, obj in ipairs({l_stick,r_stick,ball}) do
-      draw_object(obj)
-      --love.graphics.polygon('line',obj.vertices)
+   for _, o in pairs(game_objects) do
+      o:display()
    end
 end
 

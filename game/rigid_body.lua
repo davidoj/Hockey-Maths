@@ -42,6 +42,10 @@ function rigid_body:update(dt,force)
    self:updateVertices()
 end
 
+function rigid_body:display()
+   love.graphics.draw(self.img,self.x,self.y,self.theta,1,1,self.ox,self.oy)
+end
+
 function rigid_body:updateVertices()
 
    local ox, oy = self.ox or 0, self.oy or 0

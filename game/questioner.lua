@@ -11,7 +11,8 @@ function questioner:init(qdb)
       question = qdb:getRandomQuestion(),
       wait_for_input = true,
       db = qdb,
-      total_attempts = 0
+      total_attempts = 0,
+      timer = love.timer.getTime()
    }
 
    setmetatable(q,questioner_mt)
@@ -83,7 +84,7 @@ function questioner:checkAnswer()
    local test = tostring(self.question.op.func(terms[1],terms[2]))
    print('Prev: accuracy = ' .. self.question.accuracy .. ' rt = ' .. self.question.response_time .. '\n')
    if test == tostring(terms[3]) then
-      tr = love.timer.getTime() - timer
+      tr = love.timer.getTime() - self.timer
       self.question.response_time = math.min(10,self.question.response_time + alpha*(tr - self.question.response_time))
       self.question.accuracy = self.question.accuracy + alpha*(1-self.question.accuracy)
       print('New: accuracy = ' .. self.question.accuracy .. ' rt = ' .. self.question.response_time .. '\n')
