@@ -17,10 +17,11 @@ function object:create()
 end
 
 function object:update(dt,force_update)
-   if (self.e_time >= self.wait)or
+   
+   if (self.e_time >= self.wait) or
       force_update
    then
-      if self.wait > 0 or force_update then 
+      if self.wait > 0 then 
          table.remove(self.actions,1)  
       end
       self.e_time = 0

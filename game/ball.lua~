@@ -1,5 +1,6 @@
 
 require "game/objects"
+require "game/rigid_body"
 
 ball = {}
 ball_mt = { __index = ball }
@@ -21,39 +22,43 @@ function ball:create()
    return b
 end
 
+function ball:update(dt)
+   self:handleObjectCollision(l_stick,dt)
+   self:handleObjectCollision(r_stick,dt)
+   self:handleWallCollision(borders)
 
+   rigid_body.update(self,dt)
+end
 
 
 -- collision detection
 
-function ball:handleObjectCollision(obj,dt)
-   local tc, sc = ObjectCollision(self,obj)
-   sc = cId2ccode(sc)
 
-   if tc<dt and tc>=0 and sc then
-       self:reflect(sc)
-       self:sendNote({event: 'collision',with: obj,ccode: sc)
+
+local function cId2ccode(cId)
+   local c = {0,0}
+   if cId == 1 then c = {-1,0}
+   elseif cId == 2 then c = {0,-1}
+   elseif cId == 3 then c = {1,0}
+   elseif cId == 4 then c =  {0,1}
    end
+   return c
 end
 
-function ball:handleWallCollision(borders)
-   local wc = WallCollision(self,borders)
-   if wc ~= {0,0} then 
-      self:reflect(wc) 
-      self:sendNote(event: 'collision',with: borders,ccode: wc)
+local function WallCollision(obj,borders)
+   local c = {0,0}
+   x, y = obj.x - obj.ox, obj.y - obj.oy
+   if x < borders.xMin then c[1] = 1
+   elseif x+obj.w >= borders.xMax then c[1] = -1
    end
+   if y < borders.yMin then c[2] = 1
+   elseif y + obj.h >= borders.yMax then c[2] = -1
+   end
+   return c
 end
 
-function ball:reflect(ball,ccode)
-   if ccode[1]~=0 then
-      self.xdot = math.abs(self.xdot)*ccode[1]
-   end
-   if ccode[2]~=0 then
-      self.ydot = math.abs(self.ydot)*ccode[2]
-   end
-end
 
-local function ObjectCollision(objR,objS)
+local function objectCollision(objR,objS)
    sx, sy = objS.x - objS.ox, objS.y - objS.oy
    rx, ry = objR.x - objR.ox, objR.y - objR.oy
    local ux, uy = objS.xdot-objR.xdot, objS.ydot-objR.ydot
@@ -79,24 +84,30 @@ local function ObjectCollision(objR,objS)
    return maxMin, cId
 end
 
-local function cId2ccode(cId)
-   local c = {0,0}
-   if cId == 1 then c = {-1,0}
-   elseif cId == 2 then c = {0,-1}
-   elseif cId == 3 then c = {1,0}
-   elseif cId == 4 then c =  {0,1}
+
+function ball:handleObjectCollision(obj,dt)
+   local tc, sc = objectCollision(self,obj)
+   sc = cId2ccode(sc)
+
+   if tc<dt and tc>=0 and sc then
+       self:reflect(sc)
+       self:sendNote({event = 'collision',with = obj,ccode = sc})
    end
-   return c
 end
 
-local function WallCollision(obj,borders)
-   local c = {0,0}
-   x, y = obj.x - obj.ox, obj.y - obj.oy
-   if x < borders.xMin then c[1] = 1
-   elseif x+obj.w >= borders.xMax then c[1] = -1
+function ball:handleWallCollision(borders)
+   local wc = WallCollision(self,borders)
+   if wc ~= {0,0} then 
+      self:reflect(wc) 
+      self:sendNote({event = 'collision',with = borders,ccode = wc})
    end
-   if y < borders.yMin then c[2] = 1
-   elseif y + obj.h >= borders.yMax then c[2] = -1
+end
+
+function ball:reflect(ccode)
+   if ccode[1]~=0 then
+      self.xdot = math.abs(self.xdot)*ccode[1]
    end
-   return c
+   if ccode[2]~=0 then
+      self.ydot = math.abs(self.ydot)*ccode[2]
+   end
 end

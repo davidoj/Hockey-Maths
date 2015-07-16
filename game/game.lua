@@ -23,15 +23,19 @@ function game_init()
   
    table.insert(r_stick.actions,r_stick:waitForBall())
    table.insert(r_stick.actions,r_stick:seekBall())
+
+   game_objects = {q,ball,l_stick,r_stick}
    
    ball:addObserver(l_stick)
    ball:addObserver(r_stick)
    ball:addObserver(q)
+   ball:addObserver(ball)
    
    q:addObserver(l_stick)
    q:addObserver(q)
+   q:addObserver(ball)
 
-   game_objects = {q,ball,l_stick,r_stick}
+
 
 end
 

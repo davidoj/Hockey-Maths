@@ -31,9 +31,11 @@ function stick:update(dt,force)
 
    if self.side == 1 then
       while self.theta > 3*math.pi/2 do self.theta = self.theta - 2*math.pi end
+      while self.theta < -math.pi/2 do self.theta = self.theta + 2*math.pi end
    end
    if self.side == -1 then
       while self.theta < math.pi/2 do self.theta = self.theta + 2*math.pi end
+      while self.theta > 7*math.pi/2 do self.theta = self.theta - 2*math.pi end
    end
    rigid_body.update(self,dt,force) 
   
@@ -58,6 +60,11 @@ function stick:handleNote(from, note)
          table.insert(self.actions,self:waitForBall())
          table.insert(self.actions,self:seekBall())
       end
+   end
+
+
+   if note['event'] == 'speed_change' then
+      self.recalculate = true
    end
 end
 
@@ -87,7 +94,8 @@ function stick:seekBall()
       a =  {0,2*math.pi}
       angle = a[math.random(2)]
 
-      if self.e_time == 0 then 
+      if self.e_time == 0 or self.recalculate then
+         self.recalculate = nil
          self:accelToPoint(self.x,py+self.oy,angle,delta_t)
       end
       
@@ -101,13 +109,24 @@ function stick:idle()
    
    return function (dt)
       local tdot = self.thetadot
-      if tdot < self.thetadotmax then
+      if math.abs(tdot) < self.dampthreshold then
          tdot = 0
       end
+      --if math.abs(tdot) < self.thetadotmax then
 
-      self.thetaaccel =  ((2-self.side)*math.pi/2 - self.theta - 0.15*tdot)/0.01
+         self.thetaaccel =  ((2-self.side)*math.pi/2 - self.theta - 0.15*tdot)/0.01
+
+      --else
+      --   self.thetaaccel = -15*tdot
+      --end
 
       self.yaccel = (200 - self.y + self.oy - 0.15*self.ydot)/0.01
+         
+
+      --if self.side == -1 then
+      --   print('tdot = ' .. self.thetadot .. ' ' .. tdot .. ' theta =  ' 
+      --   ..  self.theta .. ' accel = ' .. self.thetaaccel)
+      --end
 
       self.e_time = self.e_time + dt
 

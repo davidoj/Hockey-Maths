@@ -30,6 +30,31 @@ function ball:update(dt)
    rigid_body.update(self,dt)
 end
 
+function ball:accelerate()
+   self:sendNote({event = 'speed_change'})
+   self.xdot = self.xdot*5
+   self.ydot = self.ydot*5
+end
+
+function ball:decelerate()
+   local v = math.sqrt(self.xdot^2 + self.ydot^2)
+   print(self.xdot .. self.ydot)
+   self.xdot = 300*self.xdot/v
+   self.ydot = 300*self.ydot/v
+   print(v .. self.xdot .. self.ydot)
+end
+
+function ball:handleNote(from,note)
+   if note['event'] == 'collision' and
+      note['ccode'][1] == -1
+   then
+      self:decelerate()
+   end
+
+   if note['event'] == 'correct_answer' then
+      self:accelerate()
+   end
+end
 
 -- collision detection
 

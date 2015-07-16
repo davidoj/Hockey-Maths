@@ -18,7 +18,8 @@ function rigid_body:create()
    rb.xdot = 0
    rb.ydot = 0
    rb.thetadot = 0
-   rb.thetadotmax = 1.5
+   rb.thetadotmax = 5
+   rb.dampthreshold = 1.5
    rb.xaccel = 0
    rb.yaccel = 0
    rb.thetaaccel = 0
