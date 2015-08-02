@@ -102,14 +102,7 @@ function stick:idle()
       self.thetaaccel =  ((2-self.side)*math.pi/2 - self.theta - 0.15*tdot)/0.01
 
       self.yaccel = (200 - self.y + self.oy - 0.15*self.ydot)/0.01
-         
 
-      -- self.e_time = self.e_time + dt
-
-      -- if (self.e_time >= self.wait) then
-      --    self:getNextAction()
-      -- end
-      -- return 0
    end
 
 end
@@ -122,7 +115,7 @@ function stick:seekBall()
       a =  {0,2*math.pi}
       angle = a[math.random(2)]
 
-      if  self.recalculate then -- or self.e_time == 0
+      if  self.recalculate then
          self.recalculate = nil
          self:accelToPoint(self.x,py+self.oy,angle,delta_t)
       end

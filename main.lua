@@ -9,6 +9,7 @@ function love.load(arg)
    require "game/game"
    require "game/questioner"
    require "util/util"
+   require "game/score"
    serialize = require 'util/ser'
    
    love.keyboard.setKeyRepeat( disable )
