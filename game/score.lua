@@ -25,7 +25,7 @@ function score:display()
 end
 
 function score:handleNote(from, note)
-   if note['event'] == 'goal' and node[side] == self.side then
+   if note['event'] == 'goal' and note['side'] == self.side then
       self.goals = self.goals+1
    end
 end

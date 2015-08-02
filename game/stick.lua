@@ -21,6 +21,8 @@ function stick:create(x,y,side)
    st.y = y
    st.side = side
 
+   self.active = 1
+
    st:updateVertices()
 
    return st
@@ -45,20 +47,21 @@ end
 
 function stick:handleNote(from, note)
 
-   if note['event'] == 'collision' and
-      note['ccode'][1] == -self.side
-   then
-      if self.side == -1 then
+   if note['event'] == 'collision' then
+      if self.side == -1 and note['ccode'][1] == 1 then
          self.actions = {}
          self.recalculate=true
          table.insert(self.actions,self:waitForBall())
          table.insert(self.actions,self:seekBall())
       end
-      --self:update(0)
+      if self.side == 1 and note['ccode'][1] == 1 then
+         self.active = 0
+      end
    end
    
    if note['event'] == 'correct_answer' then
       if self.side == 1 then
+         self.active = 1
          self.actions = {}
          self.recalculate = true
          table.insert(self.actions,self:waitForBall())

@@ -84,6 +84,10 @@ end
 
 
 local function objectCollision(objR,objS)
+   if objS.active == 0 then
+      return -1, 0
+   end
+
    sx, sy = objS.x - objS.ox, objS.y - objS.oy
    rx, ry = objR.x - objR.ox, objR.y - objR.oy
    local ux, uy = objS.xdot-objR.xdot, objS.ydot-objR.ydot
@@ -116,7 +120,7 @@ function ball:handleObjectCollision(obj,dt)
 
    if tc<dt and tc>=0 and sc then
        self:reflect(sc)
-       self:sendNote({event = 'collision',with = obj,ccode = sc})
+       self:sendNote({event = 'collision', with = obj,ccode = sc})
    end
 end
 
@@ -124,7 +128,8 @@ function ball:handleWallCollision(borders)
    local wc = WallCollision(self,borders)
    if wc ~= {0,0} then 
       self:reflect(wc) 
-      self:sendNote({event = 'collision',with = borders,ccode = wc})
+      self:sendNote({event = 'collision', with = borders,ccode = wc})
+      self:sendNote({event = 'goal', side = -wc[1]})
    end
 end
 
