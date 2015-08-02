@@ -27,7 +27,7 @@ function stick:create(x,y,side)
 end
 
 
-function stick:update(dt,force)
+function stick:update(dt) 
 
    if self.side == 1 then
       while self.theta > 3*math.pi/2 do self.theta = self.theta - 2*math.pi end
@@ -37,7 +37,7 @@ function stick:update(dt,force)
       while self.theta < math.pi/2 do self.theta = self.theta + 2*math.pi end
       while self.theta > 7*math.pi/2 do self.theta = self.theta - 2*math.pi end
    end
-   rigid_body.update(self,dt,force) 
+   rigid_body.update(self,dt)
   
 end
 
@@ -49,14 +49,18 @@ function stick:handleNote(from, note)
       note['ccode'][1] == -self.side
    then
       if self.side == -1 then
+         self.actions = {}
+         self.recalculate=true
          table.insert(self.actions,self:waitForBall())
          table.insert(self.actions,self:seekBall())
       end
-      self:update(0,1)
+      --self:update(0)
    end
    
    if note['event'] == 'correct_answer' then
       if self.side == 1 then
+         self.actions = {}
+         self.recalculate = true
          table.insert(self.actions,self:waitForBall())
          table.insert(self.actions,self:seekBall())
       end
@@ -87,24 +91,6 @@ local function predict(stick,ball)
 end
 
 
-function stick:seekBall()
-   return function (dt)
-      local py, delta_t = predict(self,ball)
-      
-      a =  {0,2*math.pi}
-      angle = a[math.random(2)]
-
-      if self.e_time == 0 or self.recalculate then
-         self.recalculate = nil
-         self:accelToPoint(self.x,py+self.oy,angle,delta_t)
-      end
-      
-      self.e_time = self.e_time + dt
-
-      return delta_t
-   end
-end
-
 function stick:idle()
    
    return function (dt)
@@ -112,27 +98,39 @@ function stick:idle()
       if math.abs(tdot) < self.dampthreshold then
          tdot = 0
       end
-      --if math.abs(tdot) < self.thetadotmax then
 
-         self.thetaaccel =  ((2-self.side)*math.pi/2 - self.theta - 0.15*tdot)/0.01
-
-      --else
-      --   self.thetaaccel = -15*tdot
-      --end
+      self.thetaaccel =  ((2-self.side)*math.pi/2 - self.theta - 0.15*tdot)/0.01
 
       self.yaccel = (200 - self.y + self.oy - 0.15*self.ydot)/0.01
          
 
-      --if self.side == -1 then
-      --   print('tdot = ' .. self.thetadot .. ' ' .. tdot .. ' theta =  ' 
-      --   ..  self.theta .. ' accel = ' .. self.thetaaccel)
-      --end
+      -- self.e_time = self.e_time + dt
 
-      self.e_time = self.e_time + dt
-
-      return 0
+      -- if (self.e_time >= self.wait) then
+      --    self:getNextAction()
+      -- end
+      -- return 0
    end
 
+end
+
+
+function stick:seekBall()
+   return function (dt)
+      local py, delta_t = predict(self,ball)
+      
+      a =  {0,2*math.pi}
+      angle = a[math.random(2)]
+
+      if  self.recalculate then -- or self.e_time == 0
+         self.recalculate = nil
+         self:accelToPoint(self.x,py+self.oy,angle,delta_t)
+      end
+
+      if delta_t <= 0.01 then
+         self:getNextAction()
+      end
+   end
 end
 
 
@@ -145,15 +143,11 @@ function stick:waitForBall()
          table.insert(self.actions,1,self:idle(dt))
          return math.huge
       end
-
-      local dwait = math.max(0,math.abs(dx-150))
-
-      local delta_t = math.abs(dwait/ball.xdot)
-
-      self.e_time = self.e_time + dt
-      self:idle()(dt)
-
-      return delta_t
+      if dx-400 > 0 then
+         self:idle()(dt)
+      else
+         self:getNextAction()
+      end
    end
 end
 

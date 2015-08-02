@@ -28,8 +28,8 @@ function rigid_body:create()
    return rb
 end
 
-function rigid_body:update(dt,force)
-   object.update(self,dt,force)
+function rigid_body:update(dt)
+   object.update(self,dt)
    local xdot = self.xdot*dt or 0
    local ydot = self.ydot*dt or 0
    local thetadot = self.thetadot*dt or 0

@@ -23,8 +23,10 @@ function questioner:display()
 
    local terms = deepcopy(self.question.terms)
    local str
+   local trial_answer = self.trial_answer
    if self.wait_for_input then
       terms[self.question.free] = '_'
+      trial_answer = trial_answer .. '_'
       str = terms[1] .. self.question.op.sym .. terms[2] .. '=' .. terms[3]
       love.graphics.print(str,350,200)
    else 
@@ -34,7 +36,7 @@ function questioner:display()
       love.graphics.setColor(255, 255,255, 255)
    end
       
-   love.graphics.print(self.trial_answer,350,250)
+   love.graphics.print(trial_answer,350,250)
 
 end
 
@@ -43,11 +45,11 @@ function questioner:handleInput(key)
    if self.wait_for_input then
       for _,value in ipairs({'1','2','3','4','5','6','7','8','9','0','-'}) do
          if value == key then
-            self.trial_answer = self.trial_answer .. key
+            self.trial_answer = self.trial_answer .. key 
          end
       end
 
-      if key == 'backspace' and #ans>0 then
+      if key == 'backspace' and #self.trial_answer>0 then
          self.trial_answer = string.sub(self.trial_answer,1,-2)
       end
       
@@ -69,7 +71,8 @@ function questioner:handleNote(from, note)
    if note['event'] == 'collision' and
       note['ccode'][1] == -1
    then
-      self:update(0,1)
+      self:getNextAction()
+      --self:update(0,1)
    end
 
    if note['event'] == 'correct_answer' then
@@ -100,20 +103,19 @@ function questioner:getNewQuestion()
    return function (dt)
       self.question = self.db:selectRandomByWeight(self.total_attempts)
       table.remove(self.actions,1)
-      return 0
+      self:getNextAction()
    end
 end
 
 function questioner:idle()
-   local t = math.huge
    return function (dt) 
       self.wait_for_input = true
-      return t 
    end
 end
 
 function questioner:pauseOnCorrect()
    print('correct!')
-   local t =  math.huge
-   return function (dt) self.wait_for_input = nil return t end
+   return function (dt) 
+      self.wait_for_input = nil 
+   end
 end

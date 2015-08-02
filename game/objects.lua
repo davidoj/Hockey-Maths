@@ -16,19 +16,10 @@ function object:create()
    return obj
 end
 
-function object:update(dt,force_update)
-   
-   if (self.e_time >= self.wait) or
-      force_update
-   then
-      if self.wait > 0 then 
-         table.remove(self.actions,1)  
-      end
-      self.e_time = 0
-      self.wait = self:execute(self.actions[1],dt)
-   else 
-      self:execute(self.actions[1],dt)
-   end   
+function object:update(dt)
+
+   self:execute(self.actions[1],dt)
+
 end
 
 function object:execute(action,dt)
@@ -56,4 +47,6 @@ function object:idle(dt)
    return function () return 0 end
 end
 
-
+function object:getNextAction()
+   table.remove(self.actions,1)
+end
