@@ -138,6 +138,6 @@ function ball:reflect(ccode)
       self.xdot = math.abs(self.xdot)*ccode[1]
    end
    if ccode[2]~=0 then
-      self.ydot = math.abs(self.ydot)*ccode[2]
+      self.ydot = math.abs(self.ydot)*ccode[2]+100*(math.random()-0.5)
    end
 end

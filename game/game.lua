@@ -38,7 +38,7 @@ function game_init()
    q:addObserver(l_stick)
    q:addObserver(q)
    q:addObserver(ball)
-
+   q:addObserver(r_score)
 
 
 end
