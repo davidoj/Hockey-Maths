@@ -30,29 +30,73 @@ function ball:update(dt)
    rigid_body.update(self,dt)
 end
 
-function ball:accelerate()
-   self:sendNote({event = 'speed_change'})
-   self.xdot = self.xdot*5
-   self.ydot = self.ydot*5
+function ball:accelerate(mult)
+   mult = mult or 5
+   return function(dt)
+      self:sendNote({event = 'speed_change'})
+      self.xdot = self.xdot*mult
+      self.ydot = self.ydot*mult
+      self:getNextAction()
+   end
 end
 
-function ball:decelerate()
-   local v = math.sqrt(self.xdot^2 + self.ydot^2)
-   print(self.xdot .. self.ydot)
-   self.xdot = 300*self.xdot/v
-   self.ydot = 300*self.ydot/v
-   print(v .. self.xdot .. self.ydot)
+function ball:setSpeed(speed)
+   speed = speed or 425
+   return function(dt)
+      self:sendNote({event = 'speed_change'})
+      local v = math.sqrt(self.xdot^2 + self.ydot^2)
+      self.xdot = speed*self.xdot/v
+      self.ydot = speed*self.ydot/v
+      self:getNextAction()
+   end
 end
+
+function ball:resetAndWait(t)
+   self:sendNote({event = 'ball_reset'})
+   t = t or math.huge
+   return function (dt)
+      self.x = borders.xMax/2
+      self.y = borders.yMax/2
+      if self.counter > t then
+         self:sendNote({event = 'ball_restart'})
+         self:getNextAction()
+         self.counter = 0
+      end
+      self.counter = self.counter + dt
+   end
+end
+
+
+function ball:reflect(ccode,with)
+   return function(dt)
+      self:sendNote({event = 'collision', with = with, ccode = ccode})
+      if with == 'wall' and ccode[1] ~= 0 then
+         self:sendNote({event = 'goal', side = -ccode[1]})
+      end
+      if ccode[1]~=0 then
+         self.xdot = math.abs(self.xdot)*ccode[1]
+      end
+      if ccode[2]~=0 then
+         self.ydot = math.abs(self.ydot)*ccode[2]+100*(math.random()-0.5)
+      end
+      self:getNextAction()
+   end
+end
+
 
 function ball:handleNote(from,note)
    if note['event'] == 'collision' and
-      note['ccode'][1] == -1
+      note['ccode'][1] == 1
    then
-      self:decelerate()
+      table.insert(self.actions,self:setSpeed())
    end
 
    if note['event'] == 'correct_answer' then
-      self:accelerate()
+      table.insert(self.actions,self:accelerate())
+   end
+
+   if note['event'] == 'update_score' and note['side'] == -1 then
+      table.insert(self.actions,self:resetAndWait(3))
    end
 end
 
@@ -118,26 +162,14 @@ function ball:handleObjectCollision(obj,dt)
    local tc, sc = objectCollision(self,obj)
    sc = cId2ccode(sc)
 
-   if tc<dt and tc>=0 and sc then
-       self:reflect(sc)
-       self:sendNote({event = 'collision', with = obj,ccode = sc})
+   if tc<dt and tc>=0 and sc and #self.actions == 0 then
+       table.insert(self.actions,self:reflect(sc,'stick'))
    end
 end
 
 function ball:handleWallCollision(borders)
    local wc = WallCollision(self,borders)
-   if wc ~= {0,0} then 
-      self:reflect(wc) 
-      self:sendNote({event = 'collision', with = borders,ccode = wc})
-      self:sendNote({event = 'goal', side = -wc[1]})
-   end
-end
-
-function ball:reflect(ccode)
-   if ccode[1]~=0 then
-      self.xdot = math.abs(self.xdot)*ccode[1]
-   end
-   if ccode[2]~=0 then
-      self.ydot = math.abs(self.ydot)*ccode[2]+100*(math.random()-0.5)
+   if (wc[1] ~= 0  or wc[2] ~= 0) and #self.actions == 0 then
+      table.insert(self.actions,self:reflect(wc,'wall'))
    end
 end

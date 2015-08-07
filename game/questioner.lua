@@ -69,15 +69,22 @@ end
 
 function questioner:handleNote(from, note)
    if note['event'] == 'collision' and
-      note['ccode'][1] == -1
+      note['ccode'][1] == 1
    then
       self:getNextAction()
-      --self:update(0,1)
    end
 
    if note['event'] == 'correct_answer' then
       table.insert(self.actions,self:pauseOnCorrect())
       table.insert(self.actions,self:getNewQuestion())
+   end
+
+   if note['event'] == 'ball_reset' then
+      table.insert(self.actions,self:pauseOnCorrect())
+   end
+
+   if note['event'] == 'ball_restart' then
+      self:getNextAction()
    end
 end
 
@@ -113,9 +120,15 @@ function questioner:idle()
    end
 end
 
-function questioner:pauseOnCorrect()
+function questioner:pauseOnCorrect(t)
    print('correct!')
+   t = t or math.huge
    return function (dt) 
-      self.wait_for_input = nil 
+      self.wait_for_input = nil
+      if self.counter > t then
+         self.getNextAction()
+         self.counter = 0
+      end
+      self.counter = self.counter + dt
    end
 end

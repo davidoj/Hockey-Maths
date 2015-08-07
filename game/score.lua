@@ -26,9 +26,13 @@ function score:display()
 end
 
 function score:handleNote(from, note)
-   if note['event'] == 'goal' and note['side'] == self.side and not self.frozen then
-      self.goals = self.goals+1
-      self.frozen = false
+   if note['event'] == 'goal' and note['side'] == self.side then
+      if not self.frozen then
+         self:sendNote({event = 'update_score', side = note['side']})
+         self.goals = self.goals+1
+      else
+         self.frozen = false
+      end
    end
    if note['event'] == 'correct_answer' and self.side == -1 then
       self.frozen = true -- no unfair goals against player

@@ -8,7 +8,8 @@ object_mt = {__index = object}
 
 function object:create()
    obj =  {actions = {},
-           observers = {}
+           observers = {},
+           counter = 0
           }
    setmetatable(obj,object_mt)
    return obj

@@ -40,6 +40,8 @@ function game_init()
    q:addObserver(ball)
    q:addObserver(r_score)
 
+   score:addObserver(ball)
+
 
 end
 
