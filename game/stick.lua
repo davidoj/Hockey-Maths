@@ -149,10 +149,10 @@ function stick:waitForBall()
       local dx = self.side*(ball.x-self.x)
       local xdot = ball.xdot*self.side
 
-      if (dx*xdot > 0 or dx < 0) then -- wait for collision, then check again
-         self.active = 0
-      end
-      if dx-400 > 0  or self.paused or self.active == 0 then
+      if (dx*xdot > 0 or dx < 0 or
+          dx-400 > 0  or self.paused 
+          or self.active == 0) 
+      then
          self:idle()(dt)
       else
          self:getNextAction()
