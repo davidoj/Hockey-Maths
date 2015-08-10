@@ -24,6 +24,8 @@ function rigid_body:create()
    rb.yaccel = 0
    rb.thetaaccel = 0
 
+   rb.active = 1
+
 
    return rb
 end

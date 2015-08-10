@@ -66,7 +66,20 @@ function ball:resetAndWait(t)
    end
 end
 
-
+function ball:makePermeable(t)
+   self.counter = 0
+   return function(dt)
+      if self.counter > t then
+         self.counter = 0
+         self.active = 1
+         self:getNextAction()
+         return
+      end
+      self.active = 0
+      self.counter = self.counter + dt
+   end
+end
+      
 function ball:reflect(ccode,with)
    return function(dt)
       self:sendNote({event = 'collision', with = with, ccode = ccode})
@@ -116,6 +129,9 @@ end
 
 local function WallCollision(obj,borders)
    local c = {0,0}
+   if obj.active == 0 then
+      return c
+   end
    x, y = obj.x - obj.ox, obj.y - obj.oy
    if x < borders.xMin then c[1] = 1
    elseif x+obj.w >= borders.xMax then c[1] = -1
@@ -128,7 +144,8 @@ end
 
 
 local function objectCollision(objR,objS)
-   if objS.active == 0 then
+
+   if objS.active == 0 or objR.active == 0 then
       return -1, 0
    end
 
@@ -164,6 +181,7 @@ function ball:handleObjectCollision(obj,dt)
 
    if tc<dt and tc>=0 and sc and #self.actions == 0 then
        table.insert(self.actions,self:reflect(sc,'stick'))
+       table.insert(self.actions,self:makePermeable(20/self.xdot))
    end
 end
 
@@ -171,5 +189,6 @@ function ball:handleWallCollision(borders)
    local wc = WallCollision(self,borders)
    if (wc[1] ~= 0  or wc[2] ~= 0) and #self.actions == 0 then
       table.insert(self.actions,self:reflect(wc,'wall'))
+      table.insert(self.actions,self:makePermeable(20/self.xdot))
    end
 end

@@ -22,11 +22,10 @@ function stick:create(x,y,side)
    st.side = side
 
    if side == -1 then
-      self.theta = 2*math.pi
+      st.theta = 2*math.pi
    end
 
-   self.active = 1
-   self.paused = nil
+   st.paused = nil
 
    st:updateVertices()
 
@@ -56,8 +55,11 @@ function stick:handleNote(from, note)
       if self.side == -1 and note['ccode'][1] == 1 then
          self:queueNextHit()
       end
-      if self.side == 1 and note['ccode'][1] == 1 then
-         self.active = 1-self.active
+   end
+
+   if note['event'] == 'new_question' then
+      if self.side == 1 then
+         self.active = 0
       end
    end
    

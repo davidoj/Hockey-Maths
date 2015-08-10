@@ -111,6 +111,7 @@ function questioner:getNewQuestion()
       self.question = self.db:selectRandomByWeight(self.total_attempts)
       table.remove(self.actions,1)
       self:getNextAction()
+      self:sendNote({event = 'new_question'})
    end
 end
 
