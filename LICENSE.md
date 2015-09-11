@@ -1,4 +1,4 @@
-** Software
+# Software
 
 This software is licensed under the MIT license
 
@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-** Art:
+# Art:
 
 Hockey Ball by OGA/fsveira http://opengameart.org/users/fsvieira  licensed under CC-BY-3.0
 
@@ -31,7 +31,7 @@ The Last Time font by Kimberley Geswein http://www.kimberlygeswein.com/ (freewar
 All other art by David Johnston, licensed under CC-BY-3.0 (see https://creativecommons.org/licenses/by/3.0/)
 
 
-** The Ser serialization library https://github.com/gvx/Ser
+# The Ser serialization library https://github.com/gvx/Ser
 
 Copyright (c) 2011, 2013 Robin Wellner
 
