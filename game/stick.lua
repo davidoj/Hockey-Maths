@@ -15,7 +15,7 @@ function stick:create(x,y,side)
    st.h = 130
    st.ox = 15
    st.oy = 130
-   st.img = love.graphics.newImage('art/hockeyStick.png')
+   st.img = love.graphics.newImage('art/hockeystick.png')
    
    st.x = x
    st.y = y
